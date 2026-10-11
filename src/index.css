@@ -719,41 +719,52 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 }
 :root[data-theme="light"] .eyebrow { color: #8a6800; }
 
-/* Ambient rainfall sits behind the interface and never intercepts clicks. */
+/* Visible green rainfall overlay, layered above app surfaces without blocking interaction. */
 .app-shell { overflow: clip; }
 .rainfall-background {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 31;
   overflow: hidden;
   pointer-events: none;
-  opacity: .43;
-  background: radial-gradient(ellipse at 72% 0%, rgba(246, 201, 69, .055), transparent 45%);
+  opacity: .88;
+  background: linear-gradient(180deg, rgba(20, 255, 105, .025), transparent 42%);
+}
+.main {
+  position: relative;
+  z-index: 32;
+  background: transparent;
+}
+.sidebar {
+  background: rgba(11, 26, 24, .88);
+  backdrop-filter: blur(2px);
 }
 .rain-drop {
   position: absolute;
-  top: -34px;
+  top: -45px;
   left: var(--rain-x);
-  width: 1px;
+  width: 1.5px;
   height: var(--rain-length);
   border-radius: 999px;
-  background: linear-gradient(to bottom, transparent, rgba(151, 222, 210, .52));
+  background: linear-gradient(to bottom, transparent, rgba(57, 255, 112, .95));
   opacity: 0;
+  filter: drop-shadow(0 0 2px rgba(57, 255, 112, .4));
   transform: rotate(11deg);
   animation: biology-rain-fall var(--rain-duration) linear var(--rain-delay) infinite;
   will-change: transform, opacity;
 }
-.rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(246, 201, 69, .75)); width: 1.5px; }
-.rain-drop:nth-child(3n) { opacity: .65; }
+.rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(100, 255, 145, 1)); width: 2px; }
+.rain-drop:nth-child(3n) { opacity: .8; }
 @keyframes biology-rain-fall {
   0% { transform: translate3d(0, -5vh, 0) rotate(11deg); opacity: 0; }
-  10% { opacity: .6; }
-  88% { opacity: .36; }
+  10% { opacity: .95; }
+  88% { opacity: .7; }
   100% { transform: translate3d(-7vw, 115vh, 0) rotate(11deg); opacity: 0; }
 }
-:root[data-theme="light"] .rainfall-background { opacity: .25; }
-:root[data-theme="light"] .rain-drop { background: linear-gradient(to bottom, transparent, rgba(46, 121, 108, .38)); }
-:root[data-theme="light"] .rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(190, 139, 10, .6)); }
+:root[data-theme="light"] .rainfall-background { opacity: .62; }
+:root[data-theme="light"] .sidebar { background: rgba(246, 250, 247, .84); }
+:root[data-theme="light"] .rain-drop { background: linear-gradient(to bottom, transparent, rgba(0, 168, 65, .85)); }
+:root[data-theme="light"] .rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(57, 255, 112, 1)); }
 @media (prefers-reduced-motion: reduce) {
-  .rain-drop { animation: none; opacity: .15; transform: translateY(20vh) rotate(11deg); }
+  .rain-drop { animation: none; opacity: .35; transform: translateY(20vh) rotate(11deg); }
 }
