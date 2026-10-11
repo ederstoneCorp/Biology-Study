@@ -133,5 +133,9 @@ export async function awardPracticePoints(sessionId: string, questionIds: string
 export async function saveRemoteProgress(progress: unknown, expectedUpdatedAt: string | null = null) {
   return request<{ ok: true; updatedAt: string }>("/api/progress", { method: "PUT", body: JSON.stringify({ progress, expectedUpdatedAt }) });
 }
+
+export async function resetRemoteProgress() {
+  return request<{ ok: true; progress: unknown; updatedAt: string }>("/api/progress/reset", { method: "POST", body: JSON.stringify({}) });
+}
 export function clearRemoteSession() { localStorage.removeItem("biology-study:auth-token"); }
 export function hasRemoteSession() { return Boolean(localStorage.getItem("biology-study:auth-token")); }
