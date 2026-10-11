@@ -15,7 +15,7 @@ button:focus-visible { outline: 2px solid #55d6c2; outline-offset: 3px; }
 .app-shell { position: relative; isolation: isolate; display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 8px; width: 100%; min-height: 100vh; background: #071312; }
 .sidebar { width: 240px; min-width: 0; height: 100vh; max-height: 100vh; padding: 24px 12px; border-right: 1px solid #19322e; background: #0b1a18; display: flex; flex-direction: column; overflow-y: auto; position: sticky; top: 0; z-index: 50; }
 .main { width: 100%; min-width: 0; height: 100vh; min-height: 0; background: #071312; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
-.topbar { min-height: 92px; padding: 24px 18px; border-bottom: 1px solid #19322e; display: flex; justify-content: space-between; align-items: center; gap: 20px; position: sticky; top: 0; z-index: 45; background: rgba(7,19,18,.94); backdrop-filter: blur(12px); }
+.topbar { min-height: 92px; padding: 24px 18px; border-bottom: 1px solid #19322e; display: flex; justify-content: space-between; align-items: center; gap: 20px; position: sticky; top: 0; z-index: 45; background: rgba(7,19,18,.94); backdrop-filter: none; }
 .content { padding: 24px 18px 50px; max-width: 1400px; margin: 0 auto; width: 100%; }
 
 .brand { display: flex; gap: 12px; align-items: center; padding: 4px 6px 28px; }
@@ -727,8 +727,8 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
   z-index: 31;
   overflow: hidden;
   pointer-events: none;
-  opacity: .88;
-  background: linear-gradient(180deg, rgba(20, 255, 105, .025), transparent 42%);
+  opacity: .72;
+  background: transparent;
 }
 .main {
   position: relative;
@@ -748,10 +748,9 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
   border-radius: 999px;
   background: linear-gradient(to bottom, transparent, rgba(57, 255, 112, .95));
   opacity: 0;
-  filter: drop-shadow(0 0 2px rgba(57, 255, 112, .4));
+  
   transform: rotate(11deg);
   animation: biology-rain-fall var(--rain-duration) linear var(--rain-delay) infinite;
-  will-change: transform, opacity;
 }
 .rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(100, 255, 145, 1)); width: 2px; }
 /* Opacity is controlled by the animation so delayed drops never appear frozen at the top. */
