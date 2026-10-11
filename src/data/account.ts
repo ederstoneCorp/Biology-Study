@@ -1,4 +1,4 @@
-import { backendEnabled, clearRemoteSession, fetchRemoteProgress, loginRemote, registerRemote, saveRemoteProgress, setAccountEmail, verifyEmail, resendVerification, forgotPassword, resetPassword, verifyAccountEmail } from "./api";
+import { backendEnabled, clearRemoteSession, fetchRemoteProgress, loginRemote, registerRemote, saveRemoteProgress, resetRemoteProgress, setAccountEmail, verifyEmail, resendVerification, forgotPassword, resetPassword, verifyAccountEmail } from "./api";
 
 // Remote-backed account model. Keep this module as the single auth/progress bridge for the UI.
 export type LocalAccount = { id: string; studentName: string; username: string; email?: string | null; passwordHash?: string; createdAt: string; };
@@ -200,33 +200,34 @@ const ACCOUNT_DATA_KEYS = [
 ] as const;
 
 export async function clearAccountStudyData(accountId: string): Promise<void> {
+  // Stop queued writes before resetting so an older snapshot cannot restore progress.
+  if (syncTimer !== null) {
+    window.clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+  pendingSyncProgress = null;
+  resolveSyncWaiters(false);
+  if (syncInFlight) await syncInFlight;
+  syncInFlight = null;
+
+  let emptyProgress: Record<string, unknown> = {
+    points: 0, streak: 0, lastStudyDate: null, attempts: [], missedQuestionIds: [],
+    revisionAttempts: [], lessonReadDate: null, lessonReadId: null, ratRetakeDate: null,
+    completedLessonIds: [], lessonHistory: [], practiceSessions: [],
+    activeRAT: null, activeCAT: null, activeRevision: null,
+  };
+  if (backendEnabled() && hasRemoteSession()) {
+    const response = await resetRemoteProgress();
+    emptyProgress = response.progress as Record<string, unknown>;
+    setCloudUpdatedAt(response.updatedAt);
+    localStorage.setItem("biology-study:remote-progress", JSON.stringify(emptyProgress));
+  }
+
   for (const key of ACCOUNT_DATA_KEYS) localStorage.removeItem(key + ":" + accountId);
   localStorage.removeItem("biology-study:progress");
   localStorage.removeItem("biology-study:nodes");
   localStorage.removeItem("biology-study:validation-queue");
-  if (backendEnabled() && hasRemoteSession()) {
-    const emptyProgress = {
-      points: 0,
-      streak: 0,
-      lastStudyDate: null,
-      attempts: [],
-      missedQuestionIds: [],
-      revisionAttempts: [],
-      lessonReadDate: null,
-      lessonReadId: null,
-      ratRetakeDate: null,
-      completedLessonIds: [],
-      lessonHistory: [],
-      practiceSessions: [],
-    };
-    try {
-      const response = await saveRemoteProgress(emptyProgress, getCloudUpdatedAt());
-      setCloudUpdatedAt(response.updatedAt);
-      localStorage.setItem("biology-study:remote-progress", JSON.stringify(emptyProgress));
-    } catch {
-      // Keep the local reset, but do not pretend the cloud reset succeeded.
-    }
-  }
+  localStorage.setItem("biology-study:progress:" + accountId, JSON.stringify(emptyProgress));
 }
 
 export async function verifyPendingEmail(email: string, code: string): Promise<LocalAccount | null> {
