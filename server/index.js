@@ -889,9 +889,13 @@ app.post("/api/assessment/submit", auth, async (req, res) => {
     }
     if (existing.rows[0]?.question_ids) {
       const storedQuestionIds = Array.isArray(existing.rows[0].question_ids) ? existing.rows[0].question_ids.map(String) : [];
-      if (storedQuestionIds.length && (storedQuestionIds.length !== questionIds.length || storedQuestionIds.some((id, index) => id !== questionIds[index]))) {
+      // Question order can differ between restored browser state and the issued session.
+      // Validate the exact set of IDs, not their display order; answers are keyed by ID.
+      const storedSet = [...storedQuestionIds].sort();
+      const submittedSet = [...questionIds].sort();
+      if (storedQuestionIds.length && (storedSet.length !== submittedSet.length || storedSet.some((id, index) => id !== submittedSet[index]))) {
         await client.query("ROLLBACK");
-        return res.status(409).json({ error: "Assessment questions do not match the issued session." });
+        return res.status(409).json({ error: "Assessment questions do not match the issued session. Reload the issued RAT session and retry." });
       }
     }
 
