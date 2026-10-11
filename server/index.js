@@ -791,12 +791,27 @@ app.post("/api/assessment/claim", auth, async (req, res) => {
 
       if (existing.rows[0]) {
         const storedIds = Array.isArray(existing.rows[0].question_ids) ? existing.rows[0].question_ids.map(String) : [];
+        const sameQuestions = storedIds.length === questionIds.length
+          && [...storedIds].sort().every((id, index) => id === [...questionIds].sort()[index]);
+
+        // Heal stale/incompatible unsubmitted RAT claims for existing accounts.
+        // The user row is locked above, so concurrent claims for this account serialize.
+        // Keep the original server session ID but bind it to the question set the current
+        // app actually issued. Completed RATs are rejected above and never rewritten.
+        if (!sameQuestions) {
+          await client.query(
+            "UPDATE assessment_submissions SET question_ids = $3::jsonb WHERE user_id = $1 AND session_id = $2 AND result IS NULL",
+            [req.user.id, existing.rows[0].session_id, JSON.stringify(questionIds)],
+          );
+        }
+
         await client.query("COMMIT");
         return res.json({
           accepted: true,
           submittedAt: existing.rows[0].submitted_at,
           sessionId: existing.rows[0].session_id,
-          questionIds: storedIds,
+          questionIds: sameQuestions ? storedIds : questionIds,
+          repaired: !sameQuestions,
         });
       }
     }
