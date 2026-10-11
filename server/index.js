@@ -816,16 +816,31 @@ app.post("/api/assessment/claim", auth, async (req, res) => {
       }
     }
 
+    // A browser may restore a session ID from a previous day or an older app version.
+    // Never reuse a completed session, and refresh question IDs on any unfinished claim.
+    const collision = await client.query(
+      "SELECT result FROM assessment_submissions WHERE user_id = $1 AND session_id = $2 FOR UPDATE",
+      [req.user.id, sessionId],
+    );
+    const issuedSessionId = collision.rows[0]?.result ? crypto.randomUUID() : sessionId;
+
     await client.query(
       `INSERT INTO assessment_submissions (user_id, session_id, assessment_type, question_ids)
        VALUES ($1, $2, $3, $4::jsonb)
        ON CONFLICT (user_id, session_id) DO UPDATE
        SET assessment_type = EXCLUDED.assessment_type,
-           question_ids = COALESCE(assessment_submissions.question_ids, EXCLUDED.question_ids)`,
-      [req.user.id, sessionId, type, JSON.stringify(questionIds)],
+           question_ids = CASE
+             WHEN assessment_submissions.result IS NULL THEN EXCLUDED.question_ids
+             ELSE assessment_submissions.question_ids
+           END,
+           submitted_at = CASE
+             WHEN assessment_submissions.result IS NULL THEN NOW()
+             ELSE assessment_submissions.submitted_at
+           END`,
+      [req.user.id, issuedSessionId, type, JSON.stringify(questionIds)],
     );
     await client.query("COMMIT");
-    return res.json({ accepted: true, submittedAt: new Date().toISOString(), sessionId, questionIds });
+    return res.json({ accepted: true, submittedAt: new Date().toISOString(), sessionId: issuedSessionId, questionIds });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("assessment claim", error);
