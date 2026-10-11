@@ -754,7 +754,7 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
   will-change: transform, opacity;
 }
 .rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(100, 255, 145, 1)); width: 2px; }
-.rain-drop:nth-child(3n) { opacity: .8; }
+/* Opacity is controlled by the animation so delayed drops never appear frozen at the top. */
 @keyframes biology-rain-fall {
   0% { transform: translate3d(0, -5vh, 0) rotate(11deg); opacity: 0; }
   10% { opacity: .95; }
@@ -766,5 +766,6 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 :root[data-theme="light"] .rain-drop { background: linear-gradient(to bottom, transparent, rgba(0, 168, 65, .85)); }
 :root[data-theme="light"] .rain-drop:nth-child(5n) { background: linear-gradient(to bottom, transparent, rgba(57, 255, 112, 1)); }
 @media (prefers-reduced-motion: reduce) {
-  .rain-drop { animation: none; opacity: .35; transform: translateY(20vh) rotate(11deg); }
+  /* Keep the requested rainfall animated even when reduced motion is enabled. */
+  .rain-drop { animation-duration: 3.8s; }
 }
