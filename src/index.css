@@ -779,3 +779,10 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 .nav-notice{position:relative;z-index:34;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 18px 0;padding:12px 14px;border:1px solid #b7791f;border-radius:12px;background:rgba(74,48,12,.94);color:#ffe8b0;line-height:1.5;font-size:13px}.nav-notice .secondary-button{flex-shrink:0;border-color:#b7791f;color:inherit;padding:7px 10px}
 :root[data-theme="light"] .nav-notice{background:#fff7e6;border-color:#d6a34b;color:#654509}
 @media(max-width:600px){.nav-notice{margin:10px 10px 0;align-items:flex-start;flex-direction:column}.nav-notice .secondary-button{align-self:flex-start}}
+
+/* Keep all study navigation and content inaccessible visually until sign-in. */
+.app-shell.is-logged-out > .sidebar{display:none!important}
+.app-shell.is-logged-out > .main{height:100vh;min-height:100vh;overflow:hidden;grid-column:1/-1;padding:0;border:0}
+.app-shell.is-logged-out > .main > :not(.onboarding-overlay):not(.auth-splash):not(.cookie-banner){display:none!important}
+.app-shell.is-logged-out .onboarding-overlay{z-index:1000}
+.app-shell.is-logged-out .auth-splash{z-index:1001}
