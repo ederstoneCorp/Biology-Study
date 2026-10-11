@@ -713,6 +713,40 @@ app.get("/api/progress", auth, async (req, res) => {
   res.json({ progress: result.rows[0]?.progress ?? null, updatedAt: result.rows[0]?.updated_at ?? null });
 });
 
+app.post("/api/progress/reset", auth, async (req, res) => {
+  const emptyProgress = {
+    points: 0, streak: 0, lastStudyDate: null, attempts: [], missedQuestionIds: [],
+    revisionAttempts: [], lessonReadDate: null, lessonReadId: null, ratRetakeDate: null,
+    completedLessonIds: [], lessonHistory: [], practiceSessions: [],
+    activeRAT: null, activeCAT: null, activeRevision: null,
+  };
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [req.user.id]);
+    await client.query("DELETE FROM point_rewards WHERE user_id = $1", [req.user.id]);
+    await client.query("DELETE FROM assessment_submissions WHERE user_id = $1", [req.user.id]);
+    await client.query("DELETE FROM assessment_states WHERE user_id = $1", [req.user.id]);
+    await client.query(
+      "INSERT INTO verified_account_state (user_id, points, updated_at) VALUES ($1, 0, NOW()) ON CONFLICT (user_id) DO UPDATE SET points = 0, updated_at = NOW()",
+      [req.user.id],
+    );
+    const saved = await client.query(
+      "INSERT INTO study_progress (user_id, progress, updated_at) VALUES ($1, $2::jsonb, NOW()) ON CONFLICT (user_id) DO UPDATE SET progress = EXCLUDED.progress, updated_at = NOW() RETURNING progress, updated_at",
+      [req.user.id, JSON.stringify(emptyProgress)],
+    );
+    await client.query("COMMIT");
+    return res.json({ ok: true, progress: saved.rows[0].progress, updatedAt: saved.rows[0].updated_at });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("progress reset", error);
+    return res.status(500).json({ error: "Progress could not be reset. No reset was completed." });
+  } finally {
+    client.release();
+  }
+});
+
+
 app.post("/api/assessment/claim", auth, async (req, res) => {
   const type = String(req.body?.type || "").toUpperCase();
   const sessionId = String(req.body?.sessionId || "");
