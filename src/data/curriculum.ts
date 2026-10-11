@@ -24,11 +24,10 @@ const STORAGE_KEY = "biology-study:curriculum-track";
 export function getCurriculumTrack(): CurriculumTrack {
   if (typeof window === "undefined") return "high-school";
   const saved = localStorage.getItem(STORAGE_KEY);
-  return saved === "university" || saved === "medical" || saved === "all" || saved === "high-school"
-    ? saved
-    : "high-school";
+  // Keep the two curriculum tracks mutually exclusive. Legacy mixed/medical selections map to university.
+  return saved === "university" || saved === "medical" || saved === "all" ? "university" : "high-school";
 }
 
 export function setCurriculumTrack(track: CurriculumTrack) {
-  localStorage.setItem(STORAGE_KEY, track);
+  localStorage.setItem(STORAGE_KEY, track === "high-school" ? "high-school" : "university");
 }
