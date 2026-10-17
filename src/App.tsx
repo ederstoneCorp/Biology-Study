@@ -51,7 +51,6 @@ function MaintenanceLanding(){
 }
 
 function App(){
- return <MaintenanceLanding/>;
  const [active,setActive]=useState<Section>(()=>curriculumSelectedToday()?"Dashboard":"Settings"),[dark,setDark]=useState(true),[time,setTime]=useState(new Date()),[progress,setProgress]=useState<StudyProgress>(()=>getProgress()),[isFullscreen,setIsFullscreen]=useState(false),[celebration,setCelebration]=useState<string|null>(null);
  const [account,setAccount]=useState<LocalAccount|null>(()=>getAccount());
  const [authenticated,setAuthenticated]=useState(()=>sessionStorage.getItem("biology-study:authenticated")==="true");
