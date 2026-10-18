@@ -53,8 +53,8 @@ function MaintenanceLanding(){
 function App(){
  const [active,setActive]=useState<Section>(()=>curriculumSelectedToday()?"Dashboard":"Settings"),[dark,setDark]=useState(true),[time,setTime]=useState(new Date()),[progress,setProgress]=useState<StudyProgress>(()=>getProgress()),[isFullscreen,setIsFullscreen]=useState(false),[celebration,setCelebration]=useState<string|null>(null);
  const [account,setAccount]=useState<LocalAccount|null>(()=>getAccount());
- const [subscriptionStatus,setSubscriptionStatus]=useState<"free"|"pending"|"active"|"expired">(()=>{const a=getAccount();const raw=a?localStorage.getItem(`biology-study:subscription:${(a.username||a.email).toLowerCase()}`):null;return raw==="pending"||raw==="active"||raw==="expired"?raw:"free";});
- useEffect(()=>{const raw=account?localStorage.getItem(`biology-study:subscription:${(account.username||account.email).toLowerCase()}`):null;setSubscriptionStatus(raw==="pending"||raw==="active"||raw==="expired"?raw:"free");},[account]);
+ const [subscriptionStatus,setSubscriptionStatus]=useState<"free"|"pending"|"active"|"expired">(()=>{const a=getAccount();const raw=a?localStorage.getItem(`biology-study:subscription:${String(a.username||a.email||a.studentName||"learner").toLowerCase()}`):null;return raw==="pending"||raw==="active"||raw==="expired"?raw:"free";});
+ useEffect(()=>{const raw=account?localStorage.getItem(`biology-study:subscription:${String(account.username||account.email||account.studentName||"learner").toLowerCase()}`):null;setSubscriptionStatus(raw==="pending"||raw==="active"||raw==="expired"?raw:"free");},[account]);
  const openSubscription=()=>setActive("Subscription");
  const requestSubscription=()=>{if(!account){setNavNotice("Create an account or sign in before requesting a subscription.");setShowOnboarding(true);return;}const key=`biology-study:subscription:${(account.username||account.email).toLowerCase()}`;localStorage.setItem(key,"pending");setSubscriptionStatus("pending");};
  const [authenticated,setAuthenticated]=useState(()=>sessionStorage.getItem("biology-study:authenticated")==="true");
