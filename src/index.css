@@ -833,3 +833,21 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 :root[data-theme="light"] .subscription-plan.premium-gold-plan{background:linear-gradient(145deg,#fff4c7,#fffdf3 68%,#f7e7ad);border-color:#c79b22;box-shadow:0 15px 40px rgba(130,94,9,.13)}
 :root[data-theme="light"] .subscription-plan.premium-gold-plan .eyebrow,:root[data-theme="light"] .subscription-plan.premium-gold-plan h3,:root[data-theme="light"] .subscription-plan.premium-gold-plan .subscription-price{color:#755300}
 :root[data-theme="light"] .subscription-plan.premium-gold-plan li{color:#4f3b08}
+
+
+/* Header plan upgrade shortcut */
+.header-actions{flex-wrap:wrap}
+.upgrade-plan-button{min-height:40px;padding:0 16px;white-space:nowrap;background:linear-gradient(135deg,#ffdf70,#d9a91d);border:1px solid #ffdf70;color:#241a00;font-weight:850;box-shadow:0 0 18px rgba(246,201,69,.16);transition:transform .2s ease,box-shadow .2s ease}
+.upgrade-plan-button:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(246,201,69,.3)}
+@media(max-width:560px){.header-actions{gap:7px}.upgrade-plan-button{min-height:36px;padding:0 10px;font-size:12px}.fullscreen-site-button{padding:0 9px;font-size:11px}}
+@media(max-width:430px){.header-actions .clock{display:inline-flex;font-size:12px}.upgrade-plan-button{padding:0 8px;font-size:11px}.fullscreen-site-button{display:none}}
+
+/* Make the authentication loading experience visibly animated. */
+.auth-splash::before{transform-origin:center;will-change:transform;animation:splashSpin 8s linear infinite}
+.auth-splash-core{animation:splashContentIn .7s cubic-bezier(.2,.8,.2,1) both}
+.auth-splash-logo{animation:splashPulse 1.25s ease-in-out infinite,splashLogoFloat 2.4s ease-in-out infinite}
+.auth-loader{position:relative}
+.auth-loader i{animation:splashLoad 5s cubic-bezier(.15,.75,.25,1) forwards}
+.auth-splash-core .badge{animation:poweredGlow 1.2s ease-in-out infinite alternate}
+@keyframes splashContentIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes splashLogoFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
