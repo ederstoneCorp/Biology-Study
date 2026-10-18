@@ -818,3 +818,18 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 .subscription-standalone .subscription-hero{padding-top:8px}
 .subscription-standalone .free-plan-button{margin-top:16px;width:100%;min-height:44px}
 @media(max-width:680px){.subscription-standalone{padding:12px}.subscription-standalone .subscription-page{padding:18px;border-radius:16px}}
+
+
+/* Gold premium tier styling */
+.subscription-plan.premium-gold-plan{position:relative;overflow:hidden;border:1px solid rgba(246,201,69,.72);background:linear-gradient(145deg,rgba(90,67,11,.94),rgba(31,26,12,.98) 58%,rgba(15,23,17,.98));box-shadow:0 18px 48px rgba(0,0,0,.28),0 0 32px rgba(246,201,69,.13),inset 0 1px 0 rgba(255,223,112,.22)}
+.subscription-plan.premium-gold-plan:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#9c7415,#ffdf70,#f6c945,#fff0a3)}
+.subscription-plan.premium-gold-plan .eyebrow,.subscription-plan.premium-gold-plan h3,.subscription-plan.premium-gold-plan .subscription-price{color:#ffdf70}
+.subscription-plan.premium-gold-plan .subscription-price{font-size:clamp(25px,3vw,32px);text-shadow:0 0 18px rgba(246,201,69,.16)}
+.subscription-plan.premium-gold-plan .subscription-price small{color:#e9dba7}
+.subscription-plan.premium-gold-plan li{color:#f5edcf}
+.subscription-plan.premium-gold-plan .primary-button{background:linear-gradient(135deg,#ffdf70,#d9a91d);border-color:#ffdf70;color:#241a00;font-weight:800}
+.subscription-plan.premium-gold-plan .primary-button:hover{background:#fff0a3}
+.subscription-plan.premium-gold-plan .subscription-current{color:#ffdf70}
+:root[data-theme="light"] .subscription-plan.premium-gold-plan{background:linear-gradient(145deg,#fff4c7,#fffdf3 68%,#f7e7ad);border-color:#c79b22;box-shadow:0 15px 40px rgba(130,94,9,.13)}
+:root[data-theme="light"] .subscription-plan.premium-gold-plan .eyebrow,:root[data-theme="light"] .subscription-plan.premium-gold-plan h3,:root[data-theme="light"] .subscription-plan.premium-gold-plan .subscription-price{color:#755300}
+:root[data-theme="light"] .subscription-plan.premium-gold-plan li{color:#4f3b08}
