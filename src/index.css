@@ -809,3 +809,12 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 .subscription-gate-overlay .subscription-page{width:min(100%,1000px);margin:auto;padding:clamp(16px,3vw,32px);border:1px solid rgba(65,201,137,.24);border-radius:24px;background:var(--panel, #101b16);box-shadow:0 28px 100px rgba(0,0,0,.45)}
 .subscription-gate-overlay .subscription-hero{padding-top:8px}
 .subscription-gate-overlay .subscription-disclaimer{margin-bottom:0}
+
+
+/* Standalone subscription choice: render no sidebar or app tabs until the learner chooses a plan. */
+.subscription-only-shell{display:block!important;position:relative;min-height:100vh;width:100%;background:#071310;overflow:hidden}
+.subscription-standalone{position:relative;z-index:32;box-sizing:border-box;min-height:100vh;width:100%;display:grid;place-items:center;padding:clamp(16px,4vw,44px)}
+.subscription-standalone .subscription-page{width:min(100%,1000px);box-sizing:border-box;padding:clamp(18px,3vw,34px);border:1px solid rgba(65,201,137,.24);border-radius:24px;background:rgba(12,25,19,.96);box-shadow:0 28px 100px rgba(0,0,0,.45)}
+.subscription-standalone .subscription-hero{padding-top:8px}
+.subscription-standalone .free-plan-button{margin-top:16px;width:100%;min-height:44px}
+@media(max-width:680px){.subscription-standalone{padding:12px}.subscription-standalone .subscription-page{padding:18px;border-radius:16px}}
