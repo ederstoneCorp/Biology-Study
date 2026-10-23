@@ -720,32 +720,32 @@ app.post("/api/question-bank/assessment", auth, async (req, res) => {
     if (requestedCount !== count) return res.status(400).json({ error: "Invalid assessment question count." });
 
     if (type === "CAT") {
-      const ratCycle = await pool.query(
-        `WITH last_cat AS (
-           SELECT COALESCE(MAX((submitted_at AT TIME ZONE 'Africa/Nairobi')::date), DATE '1900-01-01') AS cutoff
-           FROM assessment_submissions
-           WHERE user_id = $1 AND assessment_type = 'CAT' AND result IS NOT NULL
-         ),
-         rat_dates AS (
-           SELECT DISTINCT (submitted_at AT TIME ZONE 'Africa/Nairobi')::date AS rat_date
-           FROM assessment_submissions, last_cat
-           WHERE user_id = $1 AND assessment_type = 'RAT' AND result IS NOT NULL
-             AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date > last_cat.cutoff
-         )
-         SELECT rat_date
-         FROM rat_dates
-         WHERE rat_date < (NOW() AT TIME ZONE 'Africa/Nairobi')::date
-         ORDER BY rat_date DESC
-         LIMIT 3`,
-        [req.user.id],
-      );
-      const dates = ratCycle.rows.map(row => String(row.rat_date).slice(0, 10));
-      const consecutive = dates.length === 3
-        && dates[0] > dates[1] && dates[1] > dates[2]
-        && (new Date(dates[0]).getTime() - new Date(dates[1]).getTime()) === 86400000
-        && (new Date(dates[1]).getTime() - new Date(dates[2]).getTime()) === 86400000;
-      if (!consecutive) {
-        return res.status(409).json({ error: "CAT is locked. Complete one RAT on each of three consecutive days, then the CAT opens the following day." });
+      const subscription = await pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
+      const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+      if (premium) {
+        const dailyCAT = await pool.query(
+          "SELECT session_id FROM assessment_submissions WHERE user_id = $1 AND assessment_type = 'CAT' AND result IS NOT NULL AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date LIMIT 1",
+          [req.user.id]);
+        if (dailyCAT.rows.length) return res.status(409).json({ error: "You have already completed today's CAT. Another CAT is available tomorrow." });
+      } else {
+        const ratCycle = await pool.query(
+          `WITH last_cat AS (
+             SELECT COALESCE(MAX((submitted_at AT TIME ZONE 'Africa/Nairobi')::date), DATE '1900-01-01') AS cutoff
+             FROM assessment_submissions WHERE user_id = $1 AND assessment_type = 'CAT' AND result IS NOT NULL
+           ), rat_dates AS (
+             SELECT DISTINCT (submitted_at AT TIME ZONE 'Africa/Nairobi')::date AS rat_date
+             FROM assessment_submissions, last_cat
+             WHERE user_id = $1 AND assessment_type = 'RAT' AND result IS NOT NULL
+               AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date > last_cat.cutoff
+           )
+           SELECT rat_date FROM rat_dates
+           WHERE rat_date < (NOW() AT TIME ZONE 'Africa/Nairobi')::date
+           ORDER BY rat_date DESC LIMIT 3`, [req.user.id]);
+        const dates = ratCycle.rows.map(row => String(row.rat_date).slice(0, 10));
+        const consecutive = dates.length === 3 && dates[0] > dates[1] && dates[1] > dates[2]
+          && (new Date(dates[0]).getTime() - new Date(dates[1]).getTime()) === 86400000
+          && (new Date(dates[1]).getTime() - new Date(dates[2]).getTime()) === 86400000;
+        if (!consecutive) return res.status(409).json({ error: "CAT is locked. Complete one RAT on each of three consecutive days, then the CAT opens the following day." });
       }
     }
 
