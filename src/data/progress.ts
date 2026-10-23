@@ -6,7 +6,7 @@ import { getSchoolForm, includesForm, type SchoolForm } from "./schoolForm";
 
 export type AssessmentType = "RAT" | "CAT" | "REVISION";
 export type PracticeSession = { id: string; completedAt: string; total: number; correct: number; accuracy: number; maxCombo: number; questionIds: string[]; correctQuestionIds: string[]; incorrectQuestionIds: string[]; timedOutQuestionIds: string[]; topic: string; difficulty: string; };
-export type AssessmentAttempt = { id: string; type: AssessmentType; assessmentSessionId?: string; completedAt: string; score: number; correct: number; total: number; accuracy: number; passed: boolean; questionIds: string[]; correctQuestionIds?: string[]; };
+export type AssessmentAttempt = { id: string; type: AssessmentType; lessonId?: string; assessmentSessionId?: string; completedAt: string; score: number; correct: number; total: number; accuracy: number; passed: boolean; questionIds: string[]; correctQuestionIds?: string[]; };
 export type RATAttempt = AssessmentAttempt;
 export type RevisionAttempt = { id: string; completedAt: string; score: number; correct: number; total: number; accuracy: number; questionIds: string[]; assessmentSessionId?: string; };
 export type StudyProgress = {
@@ -83,7 +83,7 @@ export function getTodaysLessonId(curriculum: CurriculumTrack = getCurriculumTra
 }
 export function getLessonsCompletedToday(progress=getProgress()){const today=localDateKey();const ids=new Set(progress.lessonHistory.filter(item=>localDateKey(new Date(item.completedAt))===today).map(item=>item.lessonId));if(progress.lessonReadDate===today&&progress.lessonReadId)ids.add(progress.lessonReadId);return ids.size;}
 export function getRATsCompletedToday(progress=getProgress()){const today=localDateKey();return progress.attempts.filter(a=>a.type==="RAT"&&localDateKey(new Date(a.completedAt))===today).length;}
-export function hasCompletedRATForLessonToday(lessonId:string,progress=getProgress()){const today=localDateKey();return progress.attempts.some(a=>a.type==="RAT"&&localDateKey(new Date(a.completedAt))===today&&progress.lessonHistory.some(h=>h.lessonId===lessonId&&localDateKey(new Date(h.completedAt))===today&&a.questionIds.some(id=>id.startsWith(lessonId+":"))));}
+export function hasCompletedRATForLessonToday(lessonId:string,progress=getProgress()){const today=localDateKey();return progress.attempts.some(a=>a.type==="RAT"&&a.lessonId===lessonId&&localDateKey(new Date(a.completedAt))===today);}
 export function hasCompletedRATToday(progress=getProgress()){return getRATsCompletedToday(progress)>0;}
 export function getNextLessonId(curriculum:CurriculumTrack= getCurriculumTrack(),schoolForm:SchoolForm=getSchoolForm(),progress=getProgress()){
  const available=curriculum==="high-school"?HIGH_SCHOOL_ACTIVE_LESSONS.filter(lesson=>includesForm(schoolForm,lesson.form)):curriculum==="university"?ACTIVE_LESSONS.filter(lesson=>(lesson.curriculum??"university")==="university"):curriculum==="medical"?ACTIVE_LESSONS.filter(lesson=>lesson.curriculum==="medical"):ACTIVE_LESSONS;
@@ -140,12 +140,12 @@ export function getCATStatus(progress=getProgress()):CATStatus{
   return {eligible:false,ratDays:streak,remainingRATs,nextOpenAt:target,waitingForTodayRAT};
 }
 
-export function recordAssessmentAttempt(type:"RAT"|"CAT",result:Omit<AssessmentAttempt,"id"|"completedAt"|"type"|"assessmentSessionId">,missedIds:string[]=[],assessmentSessionId?:string):StudyProgress{
+export function recordAssessmentAttempt(type:"RAT"|"CAT",result:Omit<AssessmentAttempt,"id"|"completedAt"|"type"|"assessmentSessionId">,missedIds:string[]=[],assessmentSessionId?:string,lessonId?:string):StudyProgress{
  const progress=getProgress();const next={...progress,points:progress.points+result.score,streak:updateStreak(progress),lastStudyDate:localDateKey(),
- attempts:[{...result,type,assessmentSessionId:assessmentSessionId??(type==="RAT"?progress.activeRAT?.sessionId:progress.activeCAT?.sessionId),id:crypto.randomUUID(),completedAt:new Date().toISOString(),questionIds:result.questionIds??[]},...progress.attempts].slice(0,100),
+ attempts:[{...result,type,lessonId,assessmentSessionId:assessmentSessionId??(type==="RAT"?progress.activeRAT?.sessionId:progress.activeCAT?.sessionId),id:crypto.randomUUID(),completedAt:new Date().toISOString(),questionIds:result.questionIds??[]},...progress.attempts].slice(0,100),
  missedQuestionIds:Array.from(new Set([...progress.missedQuestionIds,...missedIds]))};saveProgress(next);return next;
 }
-export function recordRATAttempt(result:Omit<RATAttempt,"id"|"completedAt"|"type"|"assessmentSessionId">,missedIds:string[]=[],assessmentSessionId?:string){return recordAssessmentAttempt("RAT",result,missedIds,assessmentSessionId);}
+export function recordRATAttempt(result:Omit<RATAttempt,"id"|"completedAt"|"type"|"assessmentSessionId">,missedIds:string[]=[],assessmentSessionId?:string,lessonId?:string){return recordAssessmentAttempt("RAT",result,missedIds,assessmentSessionId,lessonId);}
 export function recordRevisionAttempt(result:Omit<RevisionAttempt,"id"|"completedAt">,masteredIds:string[],assessmentSessionId?:string):StudyProgress{
  const progress=getProgress();const mastered=new Set(masteredIds);const next={...progress,points:progress.points+result.score,streak:updateStreak(progress),lastStudyDate:localDateKey(),
  missedQuestionIds:progress.missedQuestionIds.filter(id=>!mastered.has(id)),
