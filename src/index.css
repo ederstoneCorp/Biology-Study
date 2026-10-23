@@ -1023,3 +1023,81 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 :root[data-premium="true"][data-theme="light"] .eyebrow,
 :root[data-premium="true"][data-theme="light"] .nav-icon{color:#755300}
 @media(max-width:680px){.subscription-continue-row{align-items:stretch;flex-direction:column}.subscription-continue-row>*{width:100%}.subscription-continue-button{min-width:0}.premium-continue-button{width:100%}}
+
+
+/* Admin console: black, blue and yellow visual system */
+.admin-dashboard {
+  background: #080b12 !important;
+  color: #f5f7ff !important;
+  border-color: rgba(59, 130, 246, .55) !important;
+  accent-color: #facc15;
+}
+.admin-dashboard .badge,
+.admin-dashboard .eyebrow,
+.admin-dashboard .generated-key-result > span {
+  color: #facc15;
+}
+.admin-dashboard h2,
+.admin-dashboard h3,
+.admin-dashboard strong { color: #f5f7ff; }
+.admin-dashboard section {
+  border-color: rgba(59, 130, 246, .34) !important;
+}
+.admin-dashboard input,
+.admin-dashboard select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #2859a8;
+  border-radius: 10px;
+  background: #0d1422;
+  color: #f5f7ff;
+  padding: 10px 12px;
+}
+.admin-dashboard input:focus,
+.admin-dashboard select:focus {
+  outline: 2px solid #facc15;
+  outline-offset: 1px;
+  border-color: #facc15;
+}
+.admin-dashboard .primary-button {
+  background: #facc15;
+  border-color: #facc15;
+  color: #090b10;
+  font-weight: 800;
+}
+.admin-dashboard .primary-button:hover:not(:disabled) {
+  background: #fde047;
+  border-color: #fde047;
+}
+.admin-dashboard .secondary-button {
+  background: #101a2b;
+  border-color: #3478e5;
+  color: #eaf1ff;
+}
+.admin-dashboard .secondary-button:hover:not(:disabled) {
+  background: #17305a;
+  border-color: #facc15;
+}
+.admin-dashboard thead tr { background: rgba(37, 99, 235, .22) !important; }
+.admin-dashboard tbody tr { border-top-color: rgba(59, 130, 246, .24) !important; }
+.admin-dashboard tbody tr:hover { background: rgba(37, 99, 235, .10); }
+.admin-dashboard .generated-key-result {
+  border: 1px solid rgba(250, 204, 21, .5);
+  background: rgba(250, 204, 21, .07);
+  border-radius: 12px;
+  padding: 12px;
+}
+.admin-auth-card {
+  background: #080b12 !important;
+  color: #f5f7ff !important;
+  border: 1px solid rgba(59, 130, 246, .55) !important;
+}
+.admin-auth-card .badge { color: #facc15; }
+.admin-auth-card input {
+  background: #0d1422 !important;
+  border-color: #2859a8 !important;
+  color: #f5f7ff !important;
+}
+.admin-auth-card input:focus { outline: 2px solid #facc15; outline-offset: 1px; }
+.admin-auth-card .primary-button { background: #facc15; border-color: #facc15; color: #090b10; }
+.admin-auth-card .secondary-button { background: #101a2b; border-color: #3478e5; color: #eaf1ff; }
