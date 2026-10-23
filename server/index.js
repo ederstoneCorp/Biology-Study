@@ -101,6 +101,7 @@ await pool.query(`
   CREATE TABLE IF NOT EXISTS subscription_requests (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','issued','fulfilled')), requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
   CREATE TABLE IF NOT EXISTS subscription_keys (id UUID PRIMARY KEY, key_hash TEXT NOT NULL UNIQUE, duration_days INTEGER NOT NULL CHECK (duration_days IN (30, 60, 90)), created_by TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), redeemed_by UUID REFERENCES users(id) ON DELETE SET NULL, redeemed_at TIMESTAMPTZ, expires_at TIMESTAMPTZ);
   CREATE TABLE IF NOT EXISTS user_subscriptions (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'free' CHECK (status IN ('free','active')), started_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS user_trials (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, assigned_by TEXT NOT NULL DEFAULT 'admin', started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 `);
 
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
@@ -374,15 +375,19 @@ function subscriptionKeyHash(value) {
   return crypto.createHash("sha256").update(normalizeSubscriptionKey(value)).digest("hex");
 }
 async function sendSubscriptionSnapshot(userId) {
-  const [subscription, request] = await Promise.all([
+  const [subscription, request, trial] = await Promise.all([
     pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [userId]),
     pool.query("SELECT status FROM subscription_requests WHERE user_id = $1", [userId]),
+    pool.query("SELECT expires_at FROM user_trials WHERE user_id = $1", [userId]),
   ]);
-  const expiresAt = subscription.rows[0]?.expires_at ?? null;
-  const isActive = Boolean(subscription.rows[0]?.status === "active" && expiresAt && new Date(expiresAt).getTime() > Date.now());
+  const premiumExpiry = subscription.rows[0]?.expires_at ?? null;
+  const premiumActive = Boolean(subscription.rows[0]?.status === "active" && premiumExpiry && new Date(premiumExpiry).getTime() > Date.now());
+  const trialExpiry = trial.rows[0]?.expires_at ?? null;
+  const trialActive = Boolean(trialExpiry && new Date(trialExpiry).getTime() > Date.now());
   return {
-    status: isActive ? "active" : (subscription.rows[0]?.status === "active" ? "expired" : "free"),
-    expiresAt,
+    status: premiumActive || trialActive ? "active" : (subscription.rows[0]?.status === "active" ? "expired" : "free"),
+    expiresAt: premiumActive ? premiumExpiry : (trialActive ? trialExpiry : premiumExpiry),
+    accessType: premiumActive ? "premium" : (trialActive ? "trial" : "free"),
     requestStatus: request.rows[0]?.status ?? "none",
   };
 }
@@ -410,6 +415,61 @@ app.post("/api/subscriptions/admin/keys", authAdmin, async (req, res) => {
   } catch (error) {
     console.error("subscription key generation", error);
     return res.status(500).json({ error: "Could not generate a subscription key." });
+  }
+});
+
+app.get("/api/subscriptions/admin/students", authAdmin, async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.id, u.student_name, u.username, u.email, u.email_verified, u.created_at,
+        us.status AS subscription_status, us.expires_at AS premium_expires_at,
+        sr.status AS request_status, sr.requested_at,
+        ut.started_at AS trial_started_at, ut.expires_at AS trial_expires_at
+      FROM users u
+      LEFT JOIN user_subscriptions us ON us.user_id = u.id
+      LEFT JOIN subscription_requests sr ON sr.user_id = u.id
+      LEFT JOIN user_trials ut ON ut.user_id = u.id
+      ORDER BY u.created_at DESC
+    `);
+    const now = Date.now();
+    const students = result.rows.map(row => {
+      const premiumActive = row.subscription_status === "active" && row.premium_expires_at && new Date(row.premium_expires_at).getTime() > now;
+      const trialActive = row.trial_expires_at && new Date(row.trial_expires_at).getTime() > now;
+      return {
+        id: row.id, studentName: row.student_name, username: row.username, email: row.email,
+        emailVerified: Boolean(row.email_verified), createdAt: row.created_at,
+        accessType: premiumActive ? "premium" : trialActive ? "trial" : "free",
+        premiumExpiresAt: row.premium_expires_at, trialStartedAt: row.trial_started_at,
+        trialExpiresAt: row.trial_expires_at, requestStatus: row.request_status || "none",
+        requestedAt: row.requested_at,
+      };
+    });
+    return res.json({ students, totalStudents: students.length, premiumStudents: students.filter(s => s.accessType === "premium").length, trialStudents: students.filter(s => s.accessType === "trial").length, freeStudents: students.filter(s => s.accessType === "free").length });
+  } catch (error) {
+    console.error("admin students", error);
+    return res.status(500).json({ error: "Unable to load student accounts." });
+  }
+});
+
+app.post("/api/subscriptions/admin/students/:userId/trial", authAdmin, async (req, res) => {
+  const hours = Number(req.body?.hours);
+  if (!Number.isInteger(hours) || hours < 1 || hours > 3) return res.status(400).json({ error: "Trial duration must be between 1 and 3 hours." });
+  try {
+    const user = await pool.query("SELECT id FROM users WHERE id = $1", [req.params.userId]);
+    if (!user.rows[0]) return res.status(404).json({ error: "Student account not found." });
+    const premium = await pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.params.userId]);
+    if (premium.rows[0]?.status === "active" && premium.rows[0]?.expires_at && new Date(premium.rows[0].expires_at).getTime() > Date.now()) {
+      return res.status(409).json({ error: "This student already has active premium access." });
+    }
+    const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+    await pool.query(
+      "INSERT INTO user_trials (user_id, assigned_by, started_at, expires_at, created_at) VALUES ($1, 'admin', NOW(), $2, NOW()) ON CONFLICT (user_id) DO UPDATE SET assigned_by = 'admin', started_at = NOW(), expires_at = EXCLUDED.expires_at, created_at = NOW()",
+      [req.params.userId, expiresAt.toISOString()]
+    );
+    return res.json({ ok: true, userId: req.params.userId, hours, startedAt: new Date().toISOString(), expiresAt: expiresAt.toISOString() });
+  } catch (error) {
+    console.error("assign trial", error);
+    return res.status(500).json({ error: "Unable to assign the trial period." });
   }
 });
 
