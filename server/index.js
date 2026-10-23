@@ -881,52 +881,28 @@ app.post("/api/assessment/claim", auth, async (req, res) => {
     await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [req.user.id]);
 
     if (type === "RAT") {
+      const subscription = await client.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
+      const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
       const completed = await client.query(
-        `SELECT session_id FROM assessment_submissions
+        `SELECT session_id, question_ids FROM assessment_submissions
          WHERE user_id = $1 AND assessment_type = 'RAT' AND result IS NOT NULL
            AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date
-         LIMIT 1`,
-        [req.user.id],
-      );
-      if (completed.rows.length) {
+         ORDER BY submitted_at`, [req.user.id]);
+      if (completed.rows.length >= (premium ? 3 : 1)) {
         await client.query("ROLLBACK");
-        return res.status(409).json({ error: "Today's RAT has already been completed. The next RAT is available tomorrow." });
+        return res.status(409).json({ error: premium ? "Today's three premium RATs have already been completed." : "Today's RAT has already been completed. The next RAT is available tomorrow." });
       }
-
-      const existing = await client.query(
-        `SELECT session_id, submitted_at, question_ids
-         FROM assessment_submissions
-         WHERE user_id = $1 AND assessment_type = 'RAT'
-           AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date
-         ORDER BY submitted_at DESC LIMIT 1
-         FOR UPDATE`,
-        [req.user.id],
-      );
-
-      if (existing.rows[0]) {
-        const storedIds = Array.isArray(existing.rows[0].question_ids) ? existing.rows[0].question_ids.map(String) : [];
-        const sameQuestions = storedIds.length === questionIds.length
-          && [...storedIds].sort().every((id, index) => id === [...questionIds].sort()[index]);
-
-        // Heal stale/incompatible unsubmitted RAT claims for existing accounts.
-        // The user row is locked above, so concurrent claims for this account serialize.
-        // Keep the original server session ID but bind it to the question set the current
-        // app actually issued. Completed RATs are rejected above and never rewritten.
-        if (!sameQuestions) {
-          await client.query(
-            "UPDATE assessment_submissions SET question_ids = $3::jsonb WHERE user_id = $1 AND session_id = $2 AND result IS NULL",
-            [req.user.id, existing.rows[0].session_id, JSON.stringify(questionIds)],
-          );
-        }
-
+      const current = await client.query(
+        `SELECT session_id, submitted_at, question_ids FROM assessment_submissions
+         WHERE user_id = $1 AND session_id = $2 AND assessment_type = 'RAT' FOR UPDATE`, [req.user.id, sessionId]);
+      if (current.rows[0]) {
+        const storedIds = Array.isArray(current.rows[0].question_ids) ? current.rows[0].question_ids.map(String) : [];
+        const sameQuestions = storedIds.length === questionIds.length && [...storedIds].sort().every((id, index) => id === [...questionIds].sort()[index]);
+        if (!sameQuestions && !current.rows[0].result) await client.query(
+          "UPDATE assessment_submissions SET question_ids = $3::jsonb WHERE user_id = $1 AND session_id = $2 AND result IS NULL",
+          [req.user.id, sessionId, JSON.stringify(questionIds)]);
         await client.query("COMMIT");
-        return res.json({
-          accepted: true,
-          submittedAt: existing.rows[0].submitted_at,
-          sessionId: existing.rows[0].session_id,
-          questionIds: sameQuestions ? storedIds : questionIds,
-          repaired: !sameQuestions,
-        });
+        return res.json({ accepted: true, submittedAt: current.rows[0].submitted_at, sessionId, questionIds: sameQuestions ? storedIds : questionIds, repaired: !sameQuestions });
       }
     }
 
@@ -1089,15 +1065,23 @@ app.post("/api/assessment/submit", auth, async (req, res) => {
       });
     }
 
-    // A RAT can be completed only once per calendar day, using Kenya time.
-    if (type === "RAT") {
-      const dailyRAT = await client.query(
-        "SELECT session_id FROM assessment_submissions WHERE user_id = $1 AND assessment_type = 'RAT' AND result IS NOT NULL AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date AND session_id <> $2 LIMIT 1",
-        [req.user.id, sessionId],
-      );
-      if (dailyRAT.rows.length) {
+    if (type === "RAT" || type === "CAT") {
+      const subscription = await client.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
+      const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+      const daily = await client.query(
+        "SELECT session_id, question_ids FROM assessment_submissions WHERE user_id = $1 AND assessment_type = $2 AND result IS NOT NULL AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date AND session_id <> $3",
+        [req.user.id, type, sessionId]);
+      const limit = type === "RAT" ? (premium ? 3 : 1) : (premium ? 1 : 999);
+      if (daily.rows.length >= limit) {
         await client.query("ROLLBACK");
-        return res.status(409).json({ error: "Today's RAT has already been completed. You can take the next RAT tomorrow." });
+        return res.status(409).json({ error: type === "CAT" ? "Premium access allows one CAT per day." : premium ? "You have completed the three RATs allowed today." : "Today's RAT has already been completed. You can take the next RAT tomorrow." });
+      }
+      if (type === "RAT" && premium && daily.rows.some(row => {
+        const oldIds = Array.isArray(row.question_ids) ? row.question_ids.map(String) : [];
+        return oldIds.length && oldIds.some(id => questionIds.includes(id));
+      })) {
+        await client.query("ROLLBACK");
+        return res.status(409).json({ error: "Each premium RAT must use different questions from your earlier RATs today." });
       }
     }
 
