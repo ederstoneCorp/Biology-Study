@@ -929,14 +929,12 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 .navigation-loading-kicker{margin-top:24px;font-size:10px;font-weight:850;letter-spacing:.24em;color:#f6c945}
 .navigation-loading-core .splash-brand-title{width:100%;margin:18px 0 13px}
 .navigation-loading-core .splash-brand-subtitle{min-height:1.5em;margin-bottom:28px}
-.navigation-loading-overlay .auth-loader{width:min(360px,78vw);height:5px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.11);box-shadow:0 0 0 1px rgba(246,201,69,.12)}
-.navigation-loading-overlay .auth-loader i{width:38%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f6c945,#39ff70,#fff0a3);box-shadow:0 0 18px rgba(57,255,112,.5);animation:navigationProgress 1.15s ease-in-out infinite alternate}
-.navigation-loading-overlay .auth-loader:before{display:none}
+.navigation-loading-spinner{display:block;width:54px;height:54px;flex:0 0 54px;box-sizing:border-box;border:5px solid rgba(246,201,69,.2);border-top-color:#f6c945;border-right-color:#39ff70;border-radius:50%;box-shadow:0 0 24px rgba(57,255,112,.18);animation:navigationSpinnerRotate .75s linear infinite;will-change:transform}
 .navigation-loading-overlay .auth-splash-footer{position:absolute;bottom:24px;left:20px;right:20px}
 :root[data-theme="light"] .navigation-loading-overlay{background:radial-gradient(ellipse at 50% 30%,rgba(57,255,112,.12),transparent 52%),rgba(245,250,246,.97)}
 :root[data-theme="light"] .navigation-loading-core .splash-brand-title{color:#102017}
 :root[data-theme="light"] .navigation-loading-core .splash-brand-subtitle{color:#52665a}
 @keyframes navigationOverlayIn{from{opacity:0}to{opacity:1}}
-@keyframes navigationProgress{from{transform:translateX(-25%)}to{transform:translateX(190%)}}
-@media(prefers-reduced-motion:reduce){.navigation-loading-overlay,.navigation-loading-core{animation:none}.navigation-loading-logo{animation:none}.navigation-loading-overlay .auth-loader i{animation:none;width:65%}}
+@keyframes navigationSpinnerRotate{to{transform:rotate(360deg)}}to{transform:translateX(190%)}}
+@media(prefers-reduced-motion:reduce){.navigation-loading-overlay,.navigation-loading-core{animation:none}.navigation-loading-logo{animation:none}.navigation-loading-spinner{animation-duration:1.5s}}
  
