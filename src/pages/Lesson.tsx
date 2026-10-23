@@ -5,10 +5,10 @@ import type { SchoolForm } from "../data/schoolForm";
 import { getProgress, getTodaysLessonId, hasReadLessonToday, markLessonRead, saveProgress, type StudyProgress } from "../data/progress";
 import { awardLessonPoints, backendEnabled } from "../data/api";
 
-type Props={curriculum:CurriculumTrack;schoolForm:SchoolForm;onRead:(progress:StudyProgress)=>void;onExit:()=>void};
+type Props={curriculum:CurriculumTrack;schoolForm:SchoolForm;lessonId?:string;premium?:boolean;lessonsCompletedToday?:number;onRead:(progress:StudyProgress)=>void;onExit:()=>void};
 
-export default function Lesson({curriculum,schoolForm,onRead,onExit}:Props){
- const todayId=getTodaysLessonId(curriculum,schoolForm);
+export default function Lesson({curriculum,schoolForm,lessonId,premium=false,lessonsCompletedToday=0,onRead,onExit}:Props){
+ const todayId=lessonId??getTodaysLessonId(curriculum,schoolForm);
  const progress=getProgress();
  const selected=lessons.find(l=>l.id===todayId)??lessons[0];
  const bankSummary=getLessonBankSummary(selected.id,curriculum);
@@ -69,7 +69,7 @@ export default function Lesson({curriculum,schoolForm,onRead,onExit}:Props){
    <div className="lesson-progress-panel">
      <div><strong>Today's reading progress</strong><span>{readPercent}% complete</span></div>
      <div className="progress"><i style={{width:`${readPercent}%`}}/></div>
-     <small>{readPercent<100?"Read and scroll through the full lesson to unlock TAKE RAT.":"100% complete. TAKE RAT is now unlocked."}</small>
+     <small>{premium?"Premium access allows up to three different lessons and their RATs each day. ":""}{readPercent<100?"Read and scroll through the full lesson to unlock TAKE RAT.":"100% complete. TAKE RAT is now unlocked."}</small>
    </div>
 
    <section className="lesson-bank-panel panel">
