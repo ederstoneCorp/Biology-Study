@@ -1172,6 +1172,15 @@ app.post("/api/rewards/lesson", auth, async (req, res) => {
   if (!lessonId || lessonId.length > 160) return res.status(400).json({ error: "Invalid lesson." });
   const nairobiDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   try {
+    const subscription = await pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
+    const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+    const dailyLimit = premium ? 3 : 1;
+    const daily = await pool.query(
+      "SELECT reward_key FROM point_rewards WHERE user_id = $1 AND reward_type = 'LESSON' AND reward_key LIKE $2",
+      [req.user.id, nairobiDate + ":%"]);
+    if (!daily.rows.some(row => row.reward_key === nairobiDate + ":" + lessonId) && daily.rows.length >= dailyLimit) {
+      return res.status(409).json({ error: premium ? "Premium access allows up to three different lessons per day." : "The free plan allows one lesson per day. Premium access allows three." });
+    }
     return res.json(await awardVerifiedPoints(req.user.id, "LESSON", nairobiDate + ":" + lessonId, 30));
   } catch (error) {
     console.error("lesson reward", error);
