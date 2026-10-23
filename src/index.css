@@ -969,3 +969,57 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
  .subscription-key-panel form { flex-direction: column; align-items: stretch; }
  .subscription-key-panel form button { width: 100%; }
 }
+
+
+/* Subscription selection and premium account-wide gold theme */
+.plan-select-card{display:block;width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+.plan-select-card:hover{transform:translateY(-2px);border-color:rgba(246,201,69,.48)}
+.plan-select-card.plan-selected{border:2px solid #f6c945;box-shadow:0 0 0 3px rgba(246,201,69,.12),0 16px 42px rgba(0,0,0,.18)}
+.plan-select-card:focus-visible{outline:3px solid #f6c945;outline-offset:3px}
+.plan-select-card .plan-request-note{display:block;margin-top:12px;line-height:1.5;color:#e9dba7}
+.subscription-continue-row{display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}
+.subscription-continue-button{min-width:180px;min-height:48px;font-weight:850}
+.premium-active-card{max-width:680px;margin:18px auto 8px;padding:clamp(26px,5vw,48px);text-align:center;border:1px solid rgba(246,201,69,.55);background:linear-gradient(145deg,rgba(86,64,10,.25),rgba(12,25,19,.95))}
+.premium-active-symbol{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 18px;border-radius:20px;background:linear-gradient(135deg,#ffdf70,#d9a91d);color:#241a00;font-size:30px;box-shadow:0 0 30px rgba(246,201,69,.2)}
+.premium-active-card h3{font-size:clamp(26px,4vw,36px);margin:10px 0;color:#ffdf70}
+.premium-active-card p{line-height:1.7;color:var(--muted,#a5b6ac)}
+.premium-continue-button{margin-top:16px;min-height:48px;min-width:220px}
+.premium-access-header{background:linear-gradient(135deg,#ffdf70,#d9a91d)!important;border-color:#ffdf70!important;color:#241a00!important}
+:root[data-premium="true"] .app-shell,
+:root[data-premium="true"] .main{background:#171307}
+:root[data-premium="true"] .sidebar{background:#211b0a;border-color:rgba(246,201,69,.28)}
+:root[data-premium="true"] .panel,
+:root[data-premium="true"] .stat-card,
+:root[data-premium="true"] .streak-card,
+:root[data-premium="true"] .question-card,
+:root[data-premium="true"] .question-map,
+:root[data-premium="true"] .result-card,
+:root[data-premium="true"] .level-card{border-color:rgba(246,201,69,.24);box-shadow:0 10px 30px rgba(0,0,0,.14)}
+:root[data-premium="true"] .nav-item.active,
+:root[data-premium="true"] .nav-item:hover{background:rgba(246,201,69,.13);color:#ffdf70}
+:root[data-premium="true"] .nav-icon,
+:root[data-premium="true"] .eyebrow,
+:root[data-premium="true"] .badge,
+:root[data-premium="true"] .fact-tag{color:#ffdf70}
+:root[data-premium="true"] .primary-button,
+:root[data-premium="true"] .upgrade-plan-button{background:linear-gradient(135deg,#ffdf70,#d9a91d);border-color:#ffdf70;color:#241a00}
+:root[data-premium="true"] .topbar{border-bottom-color:rgba(246,201,69,.2)}
+:root[data-premium="true"] .brand-mark{border-color:rgba(246,201,69,.5);box-shadow:0 0 22px rgba(246,201,69,.1)}
+:root[data-premium="true"] .progress i{background:linear-gradient(90deg,#d9a91d,#ffdf70)}
+:root[data-premium="true"] .hero-card,
+:root[data-premium="true"] .subscription-banner{border-color:rgba(246,201,69,.3);background:linear-gradient(125deg,rgba(105,79,14,.23),rgba(20,19,10,.48))}
+:root[data-premium="true"][data-theme="light"] .app-shell,
+:root[data-premium="true"][data-theme="light"] .main{background:#fffaf0}
+:root[data-premium="true"][data-theme="light"] .sidebar{background:#fff7df;border-color:#e9d59a}
+:root[data-premium="true"][data-theme="light"] .panel,
+:root[data-premium="true"][data-theme="light"] .stat-card,
+:root[data-premium="true"][data-theme="light"] .streak-card,
+:root[data-premium="true"][data-theme="light"] .question-card,
+:root[data-premium="true"][data-theme="light"] .question-map,
+:root[data-premium="true"][data-theme="light"] .result-card,
+:root[data-premium="true"][data-theme="light"] .level-card{border-color:#e9d59a}
+:root[data-premium="true"][data-theme="light"] .nav-item.active,
+:root[data-premium="true"][data-theme="light"] .nav-item:hover{background:#fff0bd;color:#755300}
+:root[data-premium="true"][data-theme="light"] .eyebrow,
+:root[data-premium="true"][data-theme="light"] .nav-icon{color:#755300}
+@media(max-width:680px){.subscription-continue-row{align-items:stretch;flex-direction:column}.subscription-continue-row>*{width:100%}.subscription-continue-button{min-width:0}.premium-continue-button{width:100%}}
