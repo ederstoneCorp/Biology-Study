@@ -4,7 +4,7 @@ import { setCloudUpdatedAt } from "../data/account";
 import { backendEnabled, createQuestionBankAssessment, submitAssessment, type RemoteQuestion, type VerifiedAssessmentResult } from "../data/api";
 import { clearActiveCAT, getCATStatus, getProgress, type StudyProgress } from "../data/progress";
 
-type Props = { onExit: () => void; onProgress: (progress: StudyProgress) => void };
+type Props = { onExit: () => void; onProgress: (progress: StudyProgress) => void; premium?: boolean };
 
 function formatCountdown(target: Date | null) {
   if (!target) return "00:00:00";
@@ -18,10 +18,10 @@ function formatCountdown(target: Date | null) {
     : String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
 }
 
-export default function CAT({ onExit, onProgress }: Props) {
+export default function CAT({ onExit, onProgress, premium=false }: Props) {
   const config = ASSESSMENT_CONFIG.cat;
   const studyProgress = getProgress();
-  const progress = getCATStatus();
+  const progress = getCATStatus(studyProgress,premium);
   const [now, setNow] = useState(Date.now());
   const [testQuestions, setTestQuestions] = useState<RemoteQuestion[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
