@@ -431,13 +431,30 @@ app.post("/api/subscriptions/admin/keys", authAdmin, async (req, res) => {
 app.get("/api/subscriptions/admin/students", authAdmin, async (_req, res) => {
   try {
     const result = await pool.query(`
-      SELECT u.id, u.student_name, u.username, u.email, u.email_verified, u.created_at,
+      SELECT
+        u.id, u.student_name, u.username, u.email, u.email_verified, u.created_at,
         u.access_blocked, u.access_block_reason, u.access_blocked_at,
         us.status AS subscription_status, us.expires_at AS premium_expires_at,
         sr.status AS request_status, sr.requested_at,
         ut.started_at AS trial_started_at, ut.expires_at AS trial_expires_at,
         COALESCE(vas.points, 0)::integer AS points,
-        CASE WHEN COALESCE(sp.progress->>'streak', '') ~ '^\\d+
+        CASE
+          WHEN COALESCE(sp.progress->>'streak', '') ~ '^\\d+$'
+          THEN (sp.progress->>'streak')::integer
+          ELSE 0
+        END AS streak,
+        CASE
+          WHEN jsonb_typeof(sp.progress->'completedLessonIds') = 'array'
+          THEN jsonb_array_length(sp.progress->'completedLessonIds')
+          ELSE 0
+        END AS lessons_completed
+      FROM users u
+      LEFT JOIN user_subscriptions us ON us.user_id = u.id
+      LEFT JOIN subscription_requests sr ON sr.user_id = u.id
+      LEFT JOIN user_trials ut ON ut.user_id = u.id
+      LEFT JOIN verified_account_state vas ON vas.user_id = u.id
+      LEFT JOIN study_progress sp ON sp.user_id = u.id
+      ORDER BY points DESC, streak DESC, lessons_completed DESC, u.username ASC
     `);
     const now = Date.now();
     const students = result.rows.map((row, index) => {
@@ -455,7 +472,13 @@ app.get("/api/subscriptions/admin/students", authAdmin, async (_req, res) => {
         accessBlockedAt: row.access_blocked_at || null,
       };
     });
-    return res.json({ students, totalStudents: students.length, premiumStudents: students.filter(s => s.accessType === "premium").length, trialStudents: students.filter(s => s.accessType === "trial").length, freeStudents: students.filter(s => s.accessType === "free").length });
+    return res.json({
+      students,
+      totalStudents: students.length,
+      premiumStudents: students.filter(student => student.accessType === "premium").length,
+      trialStudents: students.filter(student => student.accessType === "trial").length,
+      freeStudents: students.filter(student => student.accessType === "free").length,
+    });
   } catch (error) {
     console.error("admin students", error);
     return res.status(500).json({ error: "Unable to load student accounts." });
