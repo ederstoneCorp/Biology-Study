@@ -104,7 +104,8 @@ export type CATStatus = {
   waitingForTodayRAT:boolean;
 };
 
-export function getCATStatus(progress=getProgress()):CATStatus{
+export function getCATStatus(progress=getProgress(),premium=false):CATStatus{
+  if(premium){const today=localDateKey();const done=progress.attempts.some(a=>a.type==="CAT"&&localDateKey(new Date(a.completedAt))===today);return {eligible:!done,ratDays:0,remainingRATs:0,nextOpenAt:null,waitingForTodayRAT:false};}
   const lastCAT=progress.attempts.filter(a=>a.type==="CAT").sort((a,b)=>new Date(b.completedAt).getTime()-new Date(a.completedAt).getTime())[0];
   const cutoff=lastCAT?localDateKey(new Date(lastCAT.completedAt)):null;
   const ratDates=Array.from(new Set(progress.attempts
