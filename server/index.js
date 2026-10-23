@@ -374,6 +374,11 @@ function normalizeSubscriptionKey(value) {
 function subscriptionKeyHash(value) {
   return crypto.createHash("sha256").update(normalizeSubscriptionKey(value)).digest("hex");
 }
+async function hasActiveTrial(userId) {
+  const result = await pool.query("SELECT expires_at FROM user_trials WHERE user_id = $1", [userId]);
+  return Boolean(result.rows[0]?.expires_at && new Date(result.rows[0].expires_at).getTime() > Date.now());
+}
+
 async function sendSubscriptionSnapshot(userId) {
   const [subscription, request, trial] = await Promise.all([
     pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [userId]),
@@ -781,7 +786,7 @@ app.post("/api/question-bank/assessment", auth, async (req, res) => {
 
     if (type === "CAT") {
       const subscription = await pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
-      const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+      const premium = Boolean(subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now()) || await hasActiveTrial(req.user.id);
       if (premium) {
         const dailyCAT = await pool.query(
           "SELECT session_id FROM assessment_submissions WHERE user_id = $1 AND assessment_type = 'CAT' AND result IS NOT NULL AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date LIMIT 1",
@@ -942,7 +947,7 @@ app.post("/api/assessment/claim", auth, async (req, res) => {
 
     if (type === "RAT") {
       const subscription = await client.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
-      const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+      const premium = Boolean(subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now()) || await hasActiveTrial(req.user.id);
       const completed = await client.query(
         `SELECT session_id, question_ids FROM assessment_submissions
          WHERE user_id = $1 AND assessment_type = 'RAT' AND result IS NOT NULL
@@ -1127,7 +1132,7 @@ app.post("/api/assessment/submit", auth, async (req, res) => {
 
     if (type === "RAT" || type === "CAT") {
       const subscription = await client.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
-      const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+      const premium = Boolean(subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now()) || await hasActiveTrial(req.user.id);
       const daily = await client.query(
         "SELECT session_id, question_ids FROM assessment_submissions WHERE user_id = $1 AND assessment_type = $2 AND result IS NOT NULL AND (submitted_at AT TIME ZONE 'Africa/Nairobi')::date = (NOW() AT TIME ZONE 'Africa/Nairobi')::date AND session_id <> $3",
         [req.user.id, type, sessionId]);
@@ -1233,7 +1238,7 @@ app.post("/api/rewards/lesson", auth, async (req, res) => {
   const nairobiDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   try {
     const subscription = await pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [req.user.id]);
-    const premium = subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now();
+    const premium = Boolean(subscription.rows[0]?.status === "active" && subscription.rows[0]?.expires_at && new Date(subscription.rows[0].expires_at).getTime() > Date.now()) || await hasActiveTrial(req.user.id);
     const dailyLimit = premium ? 3 : 1;
     const daily = await pool.query(
       "SELECT reward_key FROM point_rewards WHERE user_id = $1 AND reward_type = 'LESSON' AND reward_key LIKE $2",
