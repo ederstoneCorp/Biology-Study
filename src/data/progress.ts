@@ -68,8 +68,18 @@ export function getTodaysLessonId(curriculum: CurriculumTrack = getCurriculumTra
        ? ACTIVE_LESSONS.filter(lesson => lesson.curriculum === "medical")
        : ACTIVE_LESSONS;
  if(!available.length)return "cellular-energy";
- const index=Math.floor(Date.now()/86400000)%available.length;
- return available[index].id;
+ const dayIndex=Math.floor(Date.now()/86400000);
+ if(curriculum==="high-school" && schoolForm>1){
+   // Keep the selected form as the main learning focus: three days of new
+   // selected-form material, followed by one cumulative review lesson.
+   const currentFormLessons=available.filter(lesson=>lesson.form===schoolForm);
+   const reviewLessons=available.filter(lesson=>lesson.form!=null&&lesson.form<schoolForm);
+   const reviewDay=dayIndex%4===3;
+   const pool=reviewDay&&reviewLessons.length?reviewLessons:currentFormLessons.length?currentFormLessons:available;
+   const index=Math.floor(dayIndex/4)%pool.length;
+   return pool[index].id;
+ }
+ return available[dayIndex%available.length].id;
 }
 export function hasCompletedRATToday(progress=getProgress()){const today=localDateKey();return progress.attempts.some(a=>a.type==="RAT"&&localDateKey(new Date(a.completedAt))===today);}
 
