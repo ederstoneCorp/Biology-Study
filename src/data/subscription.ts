@@ -61,6 +61,13 @@ export type AdminStudent = {
   trialExpiresAt: string | null;
   requestStatus: "none" | "pending" | "issued" | "fulfilled";
   requestedAt: string | null;
+  points: number;
+  rank: number;
+  streak: number;
+  lessonsCompleted: number;
+  accessBlocked: boolean;
+  accessBlockReason: string | null;
+  accessBlockedAt: string | null;
 };
 
 export type AdminStudentsSnapshot = {
@@ -79,6 +86,14 @@ export function assignAdminTrial(token: string, userId: string, hours: 1 | 2 | 3
   return request<{ ok: boolean; userId: string; hours: number; startedAt: string; expiresAt: string }>(
     `/api/subscriptions/admin/students/${encodeURIComponent(userId)}/trial`,
     { method: "POST", body: JSON.stringify({ hours }) },
+    token,
+  );
+}
+
+export function setAdminStudentAccess(token: string, userId: string, blocked: boolean, reason = "") {
+  return request<{ ok: boolean; userId: string; accessBlocked: boolean; accessBlockReason: string | null; accessBlockedAt: string | null }>(
+    `/api/subscriptions/admin/students/${encodeURIComponent(userId)}/access`,
+    { method: "POST", body: JSON.stringify({ blocked, reason }) },
     token,
   );
 }
