@@ -54,7 +54,7 @@ export default function Lesson({curriculum,schoolForm,lessonId,premium=false,les
    <div className="lesson-header">
      <div className="lesson-curriculum-badge"><span className="badge">{curriculum==="high-school" ? `FORM ${selected.form ?? "1"} • HIGH SCHOOL BIOLOGY • UP TO FORM ${schoolForm}` : curriculum.toUpperCase()}</span></div>
      <div>
-       <span className="badge">TODAY'S LESSON • LESSON {selected.sequence}</span>
+       <span className="badge">{premium? `PREMIUM LESSON ${Math.min(lessonsCompletedToday+1,3)} OF 3` : "TODAY'S LESSON"} • LESSON {selected.sequence}</span>
        <h2>{selected.title}</h2>
        <p>{selected.topic} • {selected.reference}</p>
      </div>
