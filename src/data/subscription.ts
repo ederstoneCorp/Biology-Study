@@ -47,3 +47,38 @@ export function generateSubscriptionKey(token: string, durationDays: 30 | 60 | 9
     body: JSON.stringify({ durationDays }),
   }, token);
 }
+
+export type AdminStudent = {
+  id: string;
+  studentName: string;
+  username: string;
+  email: string | null;
+  emailVerified: boolean;
+  createdAt: string;
+  accessType: "premium" | "trial" | "free";
+  premiumExpiresAt: string | null;
+  trialStartedAt: string | null;
+  trialExpiresAt: string | null;
+  requestStatus: "none" | "pending" | "issued" | "fulfilled";
+  requestedAt: string | null;
+};
+
+export type AdminStudentsSnapshot = {
+  students: AdminStudent[];
+  totalStudents: number;
+  premiumStudents: number;
+  trialStudents: number;
+  freeStudents: number;
+};
+
+export function getAdminStudents(token: string) {
+  return request<AdminStudentsSnapshot>("/api/subscriptions/admin/students", {}, token);
+}
+
+export function assignAdminTrial(token: string, userId: string, hours: 1 | 2 | 3) {
+  return request<{ ok: boolean; userId: string; hours: number; startedAt: string; expiresAt: string }>(
+    `/api/subscriptions/admin/students/${encodeURIComponent(userId)}/trial`,
+    { method: "POST", body: JSON.stringify({ hours }) },
+    token,
+  );
+}
