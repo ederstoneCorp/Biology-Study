@@ -58,7 +58,7 @@ export function markLessonRead(lessonId:string):StudyProgress{
  const next={...progress,points:progress.points+30,lessonReadDate:today,lessonReadId:lessonId,completedLessonIds,lessonHistory:[{lessonId,completedAt:new Date().toISOString()},...progress.lessonHistory].slice(0,200)};
  saveProgress(next);return next;
 }
-export function hasReadLessonToday(progress=getProgress(),lessonId?:string){return progress.lessonReadDate===localDateKey() && (!lessonId || progress.lessonReadId===lessonId);}
+export function hasReadLessonToday(progress=getProgress(),lessonId?:string){const today=localDateKey();if(lessonId)return progress.lessonHistory.some(item=>item.lessonId===lessonId&&localDateKey(new Date(item.completedAt))===today)||(progress.lessonReadDate===today&&progress.lessonReadId===lessonId);return getLessonsCompletedToday(progress)>0;}
 export function getTodaysLessonId(curriculum: CurriculumTrack = getCurriculumTrack(), schoolForm: SchoolForm = getSchoolForm()){
  const available=curriculum === "high-school"
    ? HIGH_SCHOOL_ACTIVE_LESSONS.filter(lesson => includesForm(schoolForm, lesson.form))
@@ -81,7 +81,20 @@ export function getTodaysLessonId(curriculum: CurriculumTrack = getCurriculumTra
  }
  return available[dayIndex%available.length].id;
 }
-export function hasCompletedRATToday(progress=getProgress()){const today=localDateKey();return progress.attempts.some(a=>a.type==="RAT"&&localDateKey(new Date(a.completedAt))===today);}
+export function getLessonsCompletedToday(progress=getProgress()){const today=localDateKey();const ids=new Set(progress.lessonHistory.filter(item=>localDateKey(new Date(item.completedAt))===today).map(item=>item.lessonId));if(progress.lessonReadDate===today&&progress.lessonReadId)ids.add(progress.lessonReadId);return ids.size;}
+export function getRATsCompletedToday(progress=getProgress()){const today=localDateKey();return progress.attempts.filter(a=>a.type==="RAT"&&localDateKey(new Date(a.completedAt))===today).length;}
+export function hasCompletedRATForLessonToday(lessonId:string,progress=getProgress()){const today=localDateKey();return progress.attempts.some(a=>a.type==="RAT"&&localDateKey(new Date(a.completedAt))===today&&progress.lessonHistory.some(h=>h.lessonId===lessonId&&localDateKey(new Date(h.completedAt))===today&&a.questionIds.some(id=>id.startsWith(lessonId+":"))));}
+export function hasCompletedRATToday(progress=getProgress()){return getRATsCompletedToday(progress)>0;}
+export function getNextLessonId(curriculum:CurriculumTrack= getCurriculumTrack(),schoolForm:SchoolForm=getSchoolForm(),progress=getProgress()){
+ const available=curriculum==="high-school"?HIGH_SCHOOL_ACTIVE_LESSONS.filter(lesson=>includesForm(schoolForm,lesson.form)):curriculum==="university"?ACTIVE_LESSONS.filter(lesson=>(lesson.curriculum??"university")==="university"):curriculum==="medical"?ACTIVE_LESSONS.filter(lesson=>lesson.curriculum==="medical"):ACTIVE_LESSONS;
+ if(!available.length)return getTodaysLessonId(curriculum,schoolForm);
+ const today=localDateKey();
+ const doneToday=new Set(progress.lessonHistory.filter(item=>localDateKey(new Date(item.completedAt))===today).map(item=>item.lessonId));
+ if(progress.lessonReadDate===today&&progress.lessonReadId)doneToday.add(progress.lessonReadId);
+ const neverCompleted=available.find(lesson=>!doneToday.has(lesson.id)&&!progress.completedLessonIds.includes(lesson.id));
+ const notToday=available.find(lesson=>!doneToday.has(lesson.id));
+ return (neverCompleted??notToday??available.find(lesson=>lesson.id===getTodaysLessonId(curriculum,schoolForm))??available[0]).id;
+}
 
 export type CATStatus = {
   eligible:boolean;
