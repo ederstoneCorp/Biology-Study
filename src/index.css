@@ -939,3 +939,11 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 @keyframes navigationOverlayIn{from{opacity:0}to{opacity:1}}
 @keyframes navigationProgress{from{transform:translateX(-25%)}to{transform:translateX(190%)}}
 @media(prefers-reduced-motion:reduce){.navigation-loading-overlay,.navigation-loading-core{animation:none}.navigation-loading-logo{animation:none}.navigation-loading-overlay .auth-loader i{animation:none;width:65%}}
+
+/* Make it unmistakable that this branded transition is a loading screen. */
+.navigation-loading-status{display:flex;align-items:center;justify-content:center;gap:11px;margin:2px 0 13px;color:#f6c945;font-size:clamp(13px,2vw,16px);font-weight:900;letter-spacing:.28em;text-shadow:0 0 18px rgba(246,201,69,.28)}
+.navigation-loading-spinner{width:15px;height:15px;box-sizing:border-box;border:2px solid rgba(246,201,69,.24);border-top-color:#39ff70;border-right-color:#f6c945;border-radius:50%;animation:navigationSpinner .7s linear infinite}
+.navigation-loading-status strong{animation:loadingTextPulse 1.1s ease-in-out infinite alternate}
+@keyframes navigationSpinner{to{transform:rotate(360deg)}}
+@keyframes loadingTextPulse{from{opacity:.55}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.navigation-loading-spinner,.navigation-loading-status strong{animation:none}}
