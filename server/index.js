@@ -98,6 +98,9 @@ await pool.query(`
   FROM users u
   LEFT JOIN study_progress sp ON sp.user_id = u.id
   ON CONFLICT (user_id) DO NOTHING;
+  CREATE TABLE IF NOT EXISTS subscription_requests (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','issued','fulfilled')), requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS subscription_keys (id UUID PRIMARY KEY, key_hash TEXT NOT NULL UNIQUE, duration_days INTEGER NOT NULL CHECK (duration_days IN (30, 60, 90)), created_by TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), redeemed_by UUID REFERENCES users(id) ON DELETE SET NULL, redeemed_at TIMESTAMPTZ, expires_at TIMESTAMPTZ);
+  CREATE TABLE IF NOT EXISTS user_subscriptions (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'free' CHECK (status IN ('free','active')), started_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 `);
 
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
@@ -120,6 +123,7 @@ const AUTH_LIMITS = {
   verify: { max: 10, windowMs: 15 * 60 * 1000 },
   code: { max: 5, windowMs: 15 * 60 * 1000 },
   reset: { max: 10, windowMs: 15 * 60 * 1000 },
+  adminLogin: { max: 5, windowMs: 15 * 60 * 1000 },
 };
 const authRateBuckets = new Map();
 
@@ -239,6 +243,20 @@ async function auth(req, res, next) {
   }
 }
 
+async function authAdmin(req, res, next) {
+  try {
+    const header = req.headers.authorization || "";
+    const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+    if (!token) return res.status(401).json({ error: "Administrator sign-in required." });
+    const payload = jwt.verify(token, jwtSecret);
+    if (payload.role !== "admin") return res.status(403).json({ error: "Administrator access required." });
+    req.admin = true;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Administrator session is invalid or expired." });
+  }
+}
+
 app.get("/api/health", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -347,6 +365,102 @@ app.post("/api/auth/login", async (req, res) => {
     console.error("login", error);
     return res.status(500).json({ error: "Unable to sign in." });
   }
+});
+
+function normalizeSubscriptionKey(value) {
+  return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+function subscriptionKeyHash(value) {
+  return crypto.createHash("sha256").update(normalizeSubscriptionKey(value)).digest("hex");
+}
+async function sendSubscriptionSnapshot(userId) {
+  const [subscription, request] = await Promise.all([
+    pool.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1", [userId]),
+    pool.query("SELECT status FROM subscription_requests WHERE user_id = $1", [userId]),
+  ]);
+  const expiresAt = subscription.rows[0]?.expires_at ?? null;
+  const isActive = Boolean(subscription.rows[0]?.status === "active" && expiresAt && new Date(expiresAt).getTime() > Date.now());
+  return {
+    status: isActive ? "active" : (subscription.rows[0]?.status === "active" ? "expired" : "free"),
+    expiresAt,
+    requestStatus: request.rows[0]?.status ?? "none",
+  };
+}
+
+app.post("/api/subscriptions/admin/login", async (req, res) => {
+  if (!checkAuthRateLimit(req, res, "adminLogin")) return;
+  const configuredKey = String(process.env.ADMIN_ACCESS_KEY || "");
+  if (!configuredKey) return res.status(503).json({ error: "Admin access is not configured on the server." });
+  const suppliedKey = String(req.body?.adminKey || "");
+  if (!suppliedKey || suppliedKey.length > 256) return res.status(401).json({ error: "Invalid administrator key." });
+  const expected = Buffer.from(configuredKey, "utf8");
+  const supplied = Buffer.from(suppliedKey, "utf8");
+  if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) return res.status(401).json({ error: "Invalid administrator key." });
+  return res.json({ token: jwt.sign({ role: "admin" }, jwtSecret, { expiresIn: "8h" }) });
+});
+
+app.post("/api/subscriptions/admin/keys", authAdmin, async (req, res) => {
+  const durationDays = Number(req.body?.durationDays);
+  if (![30, 60, 90].includes(durationDays)) return res.status(400).json({ error: "Choose a 30, 60, or 90 day subscription." });
+  const raw = crypto.randomBytes(12).toString("hex").toUpperCase();
+  const key = "BIO-" + (raw.match(/.{1,6}/g) || []).join("-");
+  try {
+    await pool.query("INSERT INTO subscription_keys (id, key_hash, duration_days, created_by) VALUES ($1, $2, $3, $4)", [crypto.randomUUID(), subscriptionKeyHash(key), durationDays, "admin"]);
+    return res.status(201).json({ key, durationDays, createdAt: new Date().toISOString() });
+  } catch (error) {
+    console.error("subscription key generation", error);
+    return res.status(500).json({ error: "Could not generate a subscription key." });
+  }
+});
+
+app.get("/api/subscriptions/status", auth, async (req, res) => {
+  try { return res.json(await sendSubscriptionSnapshot(req.user.id)); }
+  catch (error) { console.error("subscription status", error); return res.status(500).json({ error: "Could not load subscription status." }); }
+});
+
+app.post("/api/subscriptions/request", auth, async (req, res) => {
+  try {
+    const snapshot = await sendSubscriptionSnapshot(req.user.id);
+    if (snapshot.status === "active") return res.status(409).json({ error: "Your premium subscription is already active.", ...snapshot });
+    await pool.query("INSERT INTO subscription_requests (user_id, status, requested_at, updated_at) VALUES ($1, 'pending', NOW(), NOW()) ON CONFLICT (user_id) DO UPDATE SET status = 'pending', requested_at = NOW(), updated_at = NOW()", [req.user.id]);
+    return res.json(await sendSubscriptionSnapshot(req.user.id));
+  } catch (error) {
+    console.error("subscription request", error);
+    return res.status(500).json({ error: "Could not submit your subscription request." });
+  }
+});
+
+app.post("/api/subscriptions/redeem", auth, async (req, res) => {
+  const key = String(req.body?.key || "").trim();
+  if (key.length < 8 || key.length > 80) return res.status(400).json({ error: "Enter a valid subscription key." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const keyResult = await client.query("SELECT id, duration_days, redeemed_by FROM subscription_keys WHERE key_hash = $1 FOR UPDATE", [subscriptionKeyHash(key)]);
+    const storedKey = keyResult.rows[0];
+    if (!storedKey) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "That key is not valid. Check it and try again." });
+    }
+    if (storedKey.redeemed_by) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "That key has already been used." });
+    }
+    const current = await client.query("SELECT status, expires_at FROM user_subscriptions WHERE user_id = $1 FOR UPDATE", [req.user.id]);
+    const currentExpiry = current.rows[0]?.expires_at ? new Date(current.rows[0].expires_at) : null;
+    const startAt = currentExpiry && currentExpiry.getTime() > Date.now() ? currentExpiry : new Date();
+    const expiresAt = new Date(startAt.getTime() + Number(storedKey.duration_days) * 24 * 60 * 60 * 1000);
+    await client.query("UPDATE subscription_keys SET redeemed_by = $2, redeemed_at = NOW(), expires_at = $3 WHERE id = $1", [storedKey.id, req.user.id, expiresAt.toISOString()]);
+    await client.query("INSERT INTO user_subscriptions (user_id, status, started_at, expires_at, updated_at) VALUES ($1, 'active', NOW(), $2, NOW()) ON CONFLICT (user_id) DO UPDATE SET status = 'active', started_at = CASE WHEN user_subscriptions.expires_at > NOW() THEN user_subscriptions.started_at ELSE NOW() END, expires_at = $2, updated_at = NOW()", [req.user.id, expiresAt.toISOString()]);
+    await client.query("INSERT INTO subscription_requests (user_id, status, requested_at, updated_at) VALUES ($1, 'fulfilled', NOW(), NOW()) ON CONFLICT (user_id) DO UPDATE SET status = 'fulfilled', updated_at = NOW()", [req.user.id]);
+    await client.query("COMMIT");
+    const snapshot = await sendSubscriptionSnapshot(req.user.id);
+    return res.json({ ...snapshot, message: "Premium access activated for " + storedKey.duration_days + " days." });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("subscription key redemption", error);
+    return res.status(500).json({ error: "Could not activate this subscription key." });
+  } finally { client.release(); }
 });
 
 app.put("/api/auth/email", auth, async (req, res) => {
