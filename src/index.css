@@ -938,3 +938,34 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 @keyframes navigationSpinnerRotate{to{transform:rotate(360deg)}}to{transform:translateX(190%)}}
 @media(prefers-reduced-motion:reduce){.navigation-loading-overlay,.navigation-loading-core{animation:none}.navigation-loading-logo{animation:none}.navigation-loading-spinner{animation-duration:1.5s}}
  
+
+
+/* Subscription activation and administrator-only key generation */
+.subscription-key-panel { margin-top: 22px; padding: 24px; }
+.subscription-key-panel h3 { margin: 8px 0; }
+.subscription-key-panel > p { color: #9bb4ae; line-height: 1.6; }
+.subscription-key-panel form { display: flex; align-items: end; gap: 14px; margin-top: 18px; }
+.subscription-key-panel label { display: grid; gap: 8px; flex: 1; font-size: 13px; color: #b8ccc7; }
+.subscription-key-panel input, .admin-auth-card input, .admin-auth-card select { width: 100%; min-height: 46px; border: 1px solid #31524a; border-radius: 10px; background: #0b1a18; color: #e7f3f1; padding: 11px 13px; font: inherit; }
+.subscription-expiry { margin-top: 14px !important; color: #d7c17b !important; }
+.subscription-feedback, .subscription-success { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(45, 130, 95, .12); color: #b7e6c8; line-height: 1.5; }
+.subscription-success { border: 1px solid rgba(87, 192, 129, .35); }
+.subscription-pending { margin-top: 15px; padding: 13px; border: 1px solid rgba(211, 174, 76, .35); border-radius: 10px; background: rgba(211, 174, 76, .08); }
+.subscription-pending p { margin-bottom: 0; color: #d2c9a9; line-height: 1.5; }
+.admin-entry-button { width: 100%; }
+.admin-auth-card { max-width: 510px; }
+.admin-auth-card select { appearance: auto; }
+.generated-key-result { display: grid; gap: 12px; margin-top: 20px; padding: 18px; border: 1px solid rgba(211, 174, 76, .55); border-radius: 12px; background: rgba(211, 174, 76, .08); }
+.generated-key-result span { color: #d7c17b; font-size: 11px; letter-spacing: .12em; font-weight: 700; }
+.generated-key-result strong { overflow-wrap: anywhere; color: #f2d98a; font-size: 19px; letter-spacing: .06em; }
+.generated-key-result small { line-height: 1.5; color: #a9bbb5; }
+:root[data-theme="light"] .subscription-key-panel > p,
+:root[data-theme="light"] .subscription-key-panel label,
+:root[data-theme="light"] .generated-key-result small { color: #52615e; }
+:root[data-theme="light"] .subscription-key-panel input,
+:root[data-theme="light"] .admin-auth-card input,
+:root[data-theme="light"] .admin-auth-card select { background: #fff; color: #14211f; border-color: #c4d8d1; }
+@media (max-width: 620px) {
+ .subscription-key-panel form { flex-direction: column; align-items: stretch; }
+ .subscription-key-panel form button { width: 100%; }
+}
