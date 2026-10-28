@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 /* Global typography system: Space Grotesk + Inter + IBM Plex Mono.
    Typography-only overrides; preserve existing layout, colour, and behaviour. */
 :root {
@@ -61,7 +63,4 @@ button, .primary-button, .secondary-button, .upgrade-plan-button {
 ::placeholder {
   font-family: var(--font-body);
   font-weight: 400;
-}
-@media (prefers-reduced-motion: reduce) {
-  /* This file deliberately adds no animations or motion effects. */
 }
