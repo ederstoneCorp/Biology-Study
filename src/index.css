@@ -1101,3 +1101,84 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 .admin-auth-card input:focus { outline: 2px solid #facc15; outline-offset: 1px; }
 .admin-auth-card .primary-button { background: #facc15; border-color: #facc15; color: #090b10; }
 .admin-auth-card .secondary-button { background: #101a2b; border-color: #3478e5; color: #eaf1ff; }
+
+
+/* Background rendering correction: keep animated layers above the shell paint,
+   but below interactive app content. Surfaces are translucent so the motion shows through. */
+.app-shell { background: transparent !important; }
+.app-shell > .vanta-birds-background {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 29 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.app-shell > .rainfall-background { z-index: 30 !important; opacity: .48 !important; }
+.app-shell > .leaf-field { z-index: 31 !important; }
+.app-shell > .main {
+  position: relative;
+  z-index: 32 !important;
+  background: rgba(7, 19, 18, .68) !important;
+}
+.app-shell > .sidebar {
+  position: sticky;
+  z-index: 50 !important;
+  background: rgba(11, 26, 24, .78) !important;
+  backdrop-filter: blur(10px);
+}
+.app-shell .topbar {
+  background: rgba(7, 19, 18, .72) !important;
+  backdrop-filter: blur(12px);
+}
+.app-shell .panel,
+.app-shell .stat-card,
+.app-shell .streak-card,
+.app-shell .question-card,
+.app-shell .question-map,
+.app-shell .result-card,
+.app-shell .level-card {
+  background-color: rgba(12, 30, 27, .72) !important;
+  backdrop-filter: blur(8px);
+}
+:root[data-theme="light"] .app-shell > .main {
+  background: rgba(243, 248, 247, .66) !important;
+}
+:root[data-theme="light"] .app-shell > .sidebar {
+  background: rgba(246, 250, 247, .76) !important;
+}
+:root[data-theme="light"] .app-shell .topbar {
+  background: rgba(243, 248, 247, .72) !important;
+}
+:root[data-theme="light"] .app-shell .panel,
+:root[data-theme="light"] .app-shell .stat-card,
+:root[data-theme="light"] .app-shell .streak-card,
+:root[data-theme="light"] .app-shell .question-card,
+:root[data-theme="light"] .app-shell .question-map,
+:root[data-theme="light"] .app-shell .result-card,
+:root[data-theme="light"] .app-shell .level-card {
+  background-color: rgba(255, 255, 255, .76) !important;
+}
+:root[data-premium="true"] .app-shell > .main {
+  background: rgba(23, 19, 7, .64) !important;
+}
+:root[data-premium="true"] .app-shell > .sidebar {
+  background: rgba(33, 27, 10, .78) !important;
+}
+:root[data-premium="true"] .app-shell .topbar {
+  background: rgba(23, 19, 7, .72) !important;
+}
+:root[data-premium="true"] .app-shell .panel,
+:root[data-premium="true"] .app-shell .stat-card,
+:root[data-premium="true"] .app-shell .streak-card,
+:root[data-premium="true"] .app-shell .question-card,
+:root[data-premium="true"] .app-shell .question-map,
+:root[data-premium="true"] .app-shell .result-card,
+:root[data-premium="true"] .app-shell .level-card {
+  background-color: rgba(28, 23, 9, .76) !important;
+}
+:root[data-premium="true"][data-theme="light"] .app-shell > .main {
+  background: rgba(255, 250, 240, .66) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell > .vanta-birds-background { display: block !important; }
+}
