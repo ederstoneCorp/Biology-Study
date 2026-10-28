@@ -99,6 +99,7 @@ await pool.query(`
   LEFT JOIN study_progress sp ON sp.user_id = u.id
   ON CONFLICT (user_id) DO NOTHING;
   CREATE TABLE IF NOT EXISTS subscription_requests (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','issued','fulfilled')), requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+  CREATE TABLE IF NOT EXISTS admin_credentials (id TEXT PRIMARY KEY CHECK (id = 'primary'), password_hash TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
   CREATE TABLE IF NOT EXISTS subscription_keys (id UUID PRIMARY KEY, key_hash TEXT NOT NULL UNIQUE, duration_days INTEGER NOT NULL CHECK (duration_days IN (30, 60, 90)), created_by TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), redeemed_by UUID REFERENCES users(id) ON DELETE SET NULL, redeemed_at TIMESTAMPTZ, expires_at TIMESTAMPTZ);
   CREATE TABLE IF NOT EXISTS user_subscriptions (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'free' CHECK (status IN ('free','active')), started_at TIMESTAMPTZ, expires_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
   CREATE TABLE IF NOT EXISTS user_trials (user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, assigned_by TEXT NOT NULL DEFAULT 'admin', started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
@@ -404,14 +405,46 @@ async function sendSubscriptionSnapshot(userId) {
 
 app.post("/api/subscriptions/admin/login", async (req, res) => {
   if (!checkAuthRateLimit(req, res, "adminLogin")) return;
-  const configuredKey = String(process.env.ADMIN_ACCESS_KEY || "");
-  if (!configuredKey) return res.status(503).json({ error: "Admin access is not configured on the server." });
   const suppliedKey = String(req.body?.adminKey || "");
-  if (!suppliedKey || suppliedKey.length > 256) return res.status(401).json({ error: "Invalid administrator key." });
-  const expected = Buffer.from(configuredKey, "utf8");
-  const supplied = Buffer.from(suppliedKey, "utf8");
-  if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) return res.status(401).json({ error: "Invalid administrator key." });
-  return res.json({ token: jwt.sign({ role: "admin" }, jwtSecret, { expiresIn: "8h" }) });
+  if (!suppliedKey || suppliedKey.length > 256) return res.status(401).json({ error: "Enter a valid administrator password." });
+  try {
+    const stored = await pool.query("SELECT password_hash FROM admin_credentials WHERE id = $1", ["primary"]);
+    if (stored.rows[0]) {
+      if (!(await bcrypt.compare(suppliedKey, stored.rows[0].password_hash))) {
+        return res.status(401).json({ error: "Invalid administrator password." });
+      }
+    } else {
+      const configuredKey = String(process.env.ADMIN_ACCESS_KEY || "");
+      if (!configuredKey) return res.status(503).json({ error: "Admin setup is unavailable. Configure ADMIN_ACCESS_KEY on the server first." });
+      const expected = Buffer.from(configuredKey, "utf8");
+      const supplied = Buffer.from(suppliedKey, "utf8");
+      if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) {
+        return res.status(401).json({ error: "Invalid administrator setup key. Use the configured server key for the first sign-in." });
+      }
+    }
+    return res.json({ token: jwt.sign({ role: "admin" }, jwtSecret, { expiresIn: "8h" }) });
+  } catch (error) {
+    console.error("administrator login", error);
+    return res.status(500).json({ error: "Could not verify administrator credentials." });
+  }
+});
+
+app.post("/api/subscriptions/admin/password", authAdmin, async (req, res) => {
+  const password = String(req.body?.password || "");
+  if (password.length < 8 || password.length > 128) {
+    return res.status(400).json({ error: "Choose an administrator password between 8 and 128 characters." });
+  }
+  try {
+    const passwordHash = await bcrypt.hash(password, 12);
+    await pool.query(
+      "INSERT INTO admin_credentials (id, password_hash, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash, updated_at = NOW()",
+      ["primary"],
+    );
+    return res.json({ ok: true, message: "Administrator password saved. Use it for future sign-ins." });
+  } catch (error) {
+    console.error("administrator password update", error);
+    return res.status(500).json({ error: "Could not save the administrator password." });
+  }
 });
 
 app.post("/api/subscriptions/admin/keys", authAdmin, async (req, res) => {
