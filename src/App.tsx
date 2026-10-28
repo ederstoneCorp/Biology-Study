@@ -265,21 +265,87 @@ function AccountSwitcher({accounts,currentAccount,onLogin,onSwitch,onAddAccount}
 }
 
 function AboutPanel(){
- return <div className="content">
-  <section className="hero-grid"><div className="hero-card"><div><span className="badge">🧬 ABOUT BIOLOGY-STUDY</span><h2>Learn Biology. Build mastery.</h2><p>Biology-Study is a focused learning platform designed to help learners study Biology through structured lessons, daily assessments, revision and measurable progress.</p></div></div><div className="streak-card"><span className="muted">Built for</span><strong>Consistent learning</strong><span>Lessons, RATs, CATs, Practice and Revision work together in one study flow.</span></div></section>
-  <section className="panel about-panel"><div className="about-profile-photo-wrap"><img className="about-profile-photo" src={PROFILE_PHOTO} alt="Biology-Study profile" /></div><div className="about-copy"><span className="eyebrow">The platform</span><h3>Simple structure. Serious learning.</h3><p>Biology-Study combines curriculum-aware content, assessment scheduling, progress synchronization and learning analytics in one responsive application.</p><p>It is designed to make daily study easier to follow while giving learners a clear picture of what they have completed and where they need more practice.</p><div className="about-highlights"><span>📚 Structured lessons</span><span>📝 Daily RATs</span><span>📊 Learning analytics</span><span>🔥 Streak tracking</span></div></div></section>
- </div>;
+  return (
+    <div className="content">
+      <section className="hero-grid">
+        <div className="hero-card">
+          <div>
+            <span className="badge">🧬 ABOUT BIOLOGY-STUDY</span>
+            <h2>Learn Biology. Build mastery.</h2>
+            <p>Biology-Study is a focused learning platform designed to help learners study Biology through structured lessons, daily assessments, revision and measurable progress.</p>
+          </div>
+        </div>
+        <div className="streak-card">
+          <span className="muted">Built for</span>
+          <strong>Consistent learning</strong>
+          <span>Lessons, RATs, CATs, Practice and Revision work together in one study flow.</span>
+        </div>
+      </section>
+      <section className="panel about-panel">
+        <div className="about-profile-photo-wrap">
+          <img className="about-profile-photo" src={PROFILE_PHOTO} alt="Biology-Study profile" />
+        </div>
+        <div className="about-copy">
+          <span className="eyebrow">The platform</span>
+          <h3>Simple structure. Serious learning.</h3>
+          <p>Biology-Study combines curriculum-aware content, assessment scheduling, progress synchronization and learning analytics in one responsive application.</p>
+          <p>It is designed to make daily study easier to follow while giving learners a clear picture of what they have completed and where they need more practice.</p>
+          <div className="about-highlights">
+            <span>📚 Structured lessons</span><span>📝 Daily RATs</span><span>📊 Learning analytics</span><span>🔥 Streak tracking</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
+
 function FeedbackPanel({account}:{account:LocalAccount|null}){
- const [message,setMessage]=useState(""); const [name,setName]=useState(account?.studentName||""); const [sent,setSent]=useState(false);
- useEffect(()=>{setName(account?.studentName||"");},[account?.studentName]);
- const submit=(e:FormEvent)=>{e.preventDefault();const clean=message.trim();if(!clean)return;const source=`Source: Biology-Study Feedback | User: @${account?.username||"guest"} | Name: ${name.trim()||"Guest"}`;const text=`${source}\\n\\nFeedback:\\n${clean}`;window.open(`https://wa.me/254114956729?text=${encodeURIComponent(text)}`,"_blank","noopener,noreferrer");setSent(true);};
- return <div className="content">
-  <section className="hero-grid"><div className="hero-card"><div><span className="badge">💬 FEEDBACK</span><h2>Tell us what should be better.</h2><p>Send feedback, report an issue, suggest a feature or share your experience. Your message opens directly in WhatsApp for delivery.</p></div></div><div className="streak-card"><span className="muted">Feedback channel</span><strong>WhatsApp</strong><span>+254 114 956729</span></div></section>
-  <section className="panel feedback-panel"><div className="panel-heading"><div><span className="eyebrow">Direct feedback</span><h3>Write your message</h3></div><span className="fact-tag">Source tagged automatically</span></div>
-   <form className="feedback-form" onSubmit={submit}><label>Your name<input value={name} onChange={e=>setName(e.target.value)} maxLength={80} placeholder="Your name"/></label><label>Feedback<textarea value={message} onChange={e=>{setMessage(e.target.value);setSent(false)}} maxLength={2000} required rows={8} placeholder="Tell us what you liked, what is broken, or what you would like us to add..."/></label><div className="feedback-actions"><small>WhatsApp will open with your message and the Biology-Study source tag.</small><button className="primary-button" disabled={!message.trim()}>Send via WhatsApp ↗</button></div>{sent&&<div className="success-message">WhatsApp opened with your feedback prepared. Review it and press Send.</div>}</form>
-  </section>
- </div>;
+  const [message,setMessage]=useState("");
+  const [name,setName]=useState(account?.studentName||"");
+  const [sent,setSent]=useState(false);
+  useEffect(()=>{setName(account?.studentName||"");},[account?.studentName]);
+  const submit=(e:FormEvent)=>{
+    e.preventDefault();
+    const clean=message.trim();
+    if(!clean)return;
+    const source=`Source: Biology-Study Feedback | User: @${account?.username||"guest"} | Name: ${name.trim()||"Guest"}`;
+    const text=`${source}\n\nFeedback:\n${clean}`;
+    window.open(`https://wa.me/254114956729?text=${encodeURIComponent(text)}`,"_blank","noopener,noreferrer");
+    setSent(true);
+  };
+  return (
+    <div className="content">
+      <section className="hero-grid">
+        <div className="hero-card">
+          <div>
+            <span className="badge">💬 FEEDBACK</span>
+            <h2>Tell us what should be better.</h2>
+            <p>Send feedback, report an issue, suggest a feature or share your experience. Your message opens directly in WhatsApp for delivery.</p>
+          </div>
+        </div>
+        <div className="streak-card">
+          <span className="muted">Feedback channel</span>
+          <strong>WhatsApp</strong>
+          <span>+254 114 956729</span>
+        </div>
+      </section>
+      <section className="panel feedback-panel">
+        <div className="panel-heading">
+          <div><span className="eyebrow">Direct feedback</span><h3>Write your message</h3></div>
+          <span className="fact-tag">Source tagged automatically</span>
+        </div>
+        <form className="feedback-form" onSubmit={submit}>
+          <label>Your name<input value={name} onChange={e=>setName(e.target.value)} maxLength={80} placeholder="Your name"/></label>
+          <label>Feedback<textarea value={message} onChange={e=>{setMessage(e.target.value);setSent(false)}} maxLength={2000} required rows={8} placeholder="Tell us what you liked, what is broken, or what you would like us to add..."/></label>
+          <div className="feedback-actions">
+            <small>WhatsApp will open with your message and the Biology-Study source tag.</small>
+            <button className="primary-button" disabled={!message.trim()}>Send via WhatsApp ↗</button>
+          </div>
+          {sent&&<div className="success-message">WhatsApp opened with your feedback prepared. Review it and press Send.</div>}
+        </form>
+      </section>
+    </div>
+  );
 }
 function Calendar({progress,onRefresh}:{progress:StudyProgress;onRefresh:()=>Promise<StudyProgress|null>}){
  const today=new Date();
