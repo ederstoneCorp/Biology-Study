@@ -22,16 +22,16 @@
 }
 .app-shell { isolation: isolate; background: transparent !important; }
 .app-shell > .vanta-birds-background { z-index: 1 !important; }
-.app-shell > .main { position: relative; z-index: 2 !important; background: rgba(7,19,18,.18) !important; }
-.app-shell > .sidebar { position: sticky; z-index: 5 !important; background: rgba(11,26,24,.48) !important; backdrop-filter: blur(5px); }
-.app-shell .topbar { background: rgba(7,19,18,.42) !important; backdrop-filter: blur(6px); }
-.app-shell .panel,.app-shell .stat-card,.app-shell .streak-card,.app-shell .question-card,.app-shell .question-map,.app-shell .result-card,.app-shell .level-card { background-color: rgba(12,30,27,.52) !important; backdrop-filter: blur(4px); }
-:root[data-theme="light"] .app-shell > .main { background: rgba(243,248,247,.18) !important; }
-:root[data-theme="light"] .app-shell > .sidebar { background: rgba(246,250,247,.5) !important; }
-:root[data-theme="light"] .app-shell .topbar { background: rgba(243,248,247,.42) !important; }
-:root[data-theme="light"] .app-shell .panel,:root[data-theme="light"] .app-shell .stat-card,:root[data-theme="light"] .app-shell .streak-card,:root[data-theme="light"] .app-shell .question-card,:root[data-theme="light"] .app-shell .question-map,:root[data-theme="light"] .app-shell .result-card,:root[data-theme="light"] .app-shell .level-card { background-color: rgba(255,255,255,.56) !important; }
-:root[data-premium="true"] .app-shell > .main { background: rgba(23,19,7,.18) !important; }
-:root[data-premium="true"] .app-shell > .sidebar { background: rgba(33,27,10,.5) !important; }
-:root[data-premium="true"] .app-shell .topbar { background: rgba(23,19,7,.42) !important; }
-:root[data-premium="true"] .app-shell .panel,:root[data-premium="true"] .app-shell .stat-card,:root[data-premium="true"] .app-shell .streak-card,:root[data-premium="true"] .app-shell .question-card,:root[data-premium="true"] .app-shell .question-map,:root[data-premium="true"] .app-shell .result-card,:root[data-premium="true"] .app-shell .level-card { background-color: rgba(28,23,9,.54) !important; }
-:root[data-premium="true"][data-theme="light"] .app-shell > .main { background: rgba(255,250,240,.18) !important; }
+.app-shell > .main { position: relative; z-index: 2 !important; background: rgba(7,19,18,.10) !important; }
+.app-shell > .sidebar { position: sticky; z-index: 5 !important; background: rgba(11,26,24,.30) !important; backdrop-filter: blur(5px); }
+.app-shell .topbar { background: rgba(7,19,18,.25) !important; backdrop-filter: blur(6px); }
+.app-shell .panel,.app-shell .stat-card,.app-shell .streak-card,.app-shell .question-card,.app-shell .question-map,.app-shell .result-card,.app-shell .level-card { background-color: rgba(12,30,27,.28) !important; backdrop-filter: blur(4px); }
+:root[data-theme="light"] .app-shell > .main { background: rgba(243,248,247,.10) !important; }
+:root[data-theme="light"] .app-shell > .sidebar { background: rgba(246,250,247,.30) !important; }
+:root[data-theme="light"] .app-shell .topbar { background: rgba(243,248,247,.25) !important; }
+:root[data-theme="light"] .app-shell .panel,:root[data-theme="light"] .app-shell .stat-card,:root[data-theme="light"] .app-shell .streak-card,:root[data-theme="light"] .app-shell .question-card,:root[data-theme="light"] .app-shell .question-map,:root[data-theme="light"] .app-shell .result-card,:root[data-theme="light"] .app-shell .level-card { background-color: rgba(255,255,255,.32) !important; }
+:root[data-premium="true"] .app-shell > .main { background: rgba(23,19,7,.10) !important; }
+:root[data-premium="true"] .app-shell > .sidebar { background: rgba(33,27,10,.30) !important; }
+:root[data-premium="true"] .app-shell .topbar { background: rgba(23,19,7,.25) !important; }
+:root[data-premium="true"] .app-shell .panel,:root[data-premium="true"] .app-shell .stat-card,:root[data-premium="true"] .app-shell .streak-card,:root[data-premium="true"] .app-shell .question-card,:root[data-premium="true"] .app-shell .question-map,:root[data-premium="true"] .app-shell .result-card,:root[data-premium="true"] .app-shell .level-card { background-color: rgba(28,23,9,.30) !important; }
+:root[data-premium="true"][data-theme="light"] .app-shell > .main { background: rgba(255,250,240,.10) !important; }
