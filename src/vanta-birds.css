@@ -1,0 +1,24 @@
+.vanta-birds-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.58;
+}
+.vanta-birds-background canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+.app-shell > .rainfall-background,
+.app-shell > .vanta-birds-background,
+.app-shell > .leaf-field {
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .vanta-birds-background { opacity: 0.38; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vanta-birds-background { display: none; }
+}
