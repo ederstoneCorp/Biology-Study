@@ -5,6 +5,7 @@ import Revision from "./pages/Revision";
 import Practice from "./pages/Practice";
 import Lesson from "./pages/Lesson";
 import Analytics from "./pages/Analytics";
+import VantaBirdsBackground from "./VantaBirdsBackground";
 import PROFILE_PHOTO from "./assets/profilePhoto";
 import { getProgress, hasCompletedRATToday, hasReadLessonToday, getCATStatus, getNextLessonId, getLessonsCompletedToday, getRATsCompletedToday, replaceProgress, clearActiveRAT, type StudyProgress } from "./data/progress";
 import { getDailyFact } from "./data/commonKnowledge";
@@ -22,7 +23,9 @@ const icons:Record<Section,string>={Dashboard:"⌂",Notes:"✎",Lesson:"01",RAT:
 
 
 function RainfallBackground(){
- return <div className="rainfall-background" aria-hidden="true">
+ return <>
+  <VantaBirdsBackground />
+  <div className="rainfall-background" aria-hidden="true">
   {Array.from({length:88},(_,i)=><span key={i} className="rain-drop" style={{"--rain-x":`${(i*37)%100}%`,"--rain-delay":`-${(i*173)%4200}ms`,"--rain-duration":`${2200+(i*97)%1800}ms`,"--rain-length":`${12+(i*7)%17}px`} as CSSProperties}/>)}
  </div>;
 }
