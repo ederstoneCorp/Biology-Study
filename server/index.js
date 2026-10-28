@@ -409,17 +409,24 @@ app.post("/api/subscriptions/admin/login", async (req, res) => {
   if (!suppliedKey || suppliedKey.length > 256) return res.status(401).json({ error: "Enter a valid administrator password." });
   try {
     const stored = await pool.query("SELECT password_hash FROM admin_credentials WHERE id = $1", ["primary"]);
-    if (stored.rows[0]) {
-      if (!(await bcrypt.compare(suppliedKey, stored.rows[0].password_hash))) {
-        return res.status(401).json({ error: "Invalid administrator password." });
-      }
-    } else {
-      const configuredKey = String(process.env.ADMIN_ACCESS_KEY || "");
-      if (!configuredKey) return res.status(503).json({ error: "Admin setup is unavailable. Configure ADMIN_ACCESS_KEY on the server first." });
+    const configuredKey = String(process.env.ADMIN_ACCESS_KEY || "");
+    const matchesConfiguredKey = () => {
+      if (!configuredKey) return false;
       const expected = Buffer.from(configuredKey, "utf8");
       const supplied = Buffer.from(suppliedKey, "utf8");
-      if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) {
-        return res.status(401).json({ error: "Invalid administrator setup key. Use the configured server key for the first sign-in." });
+      return expected.length === supplied.length && crypto.timingSafeEqual(expected, supplied);
+    };
+    if (stored.rows[0]) {
+      const matchesSavedPassword = await bcrypt.compare(suppliedKey, stored.rows[0].password_hash);
+      // Keep the server-side setup key as a recovery credential so an admin is
+      // not permanently locked out after a typo or forgotten saved password.
+      if (!matchesSavedPassword && !matchesConfiguredKey()) {
+        return res.status(401).json({ error: "Incorrect administrator password. Try your saved password or the administrator recovery key configured on Render." });
+      }
+    } else {
+      if (!configuredKey) return res.status(503).json({ error: "Admin setup is unavailable. Configure ADMIN_ACCESS_KEY on the server first." });
+      if (!matchesConfiguredKey()) {
+        return res.status(401).json({ error: "Incorrect setup key. Use the ADMIN_ACCESS_KEY value configured on Render for the first sign-in." });
       }
     }
     return res.json({ token: jwt.sign({ role: "admin" }, jwtSecret, { expiresIn: "8h" }) });
