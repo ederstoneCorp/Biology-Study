@@ -10,6 +10,7 @@ import { getProgress, hasCompletedRATToday, hasReadLessonToday, getCATStatus, ge
 import { getDailyFact } from "./data/commonKnowledge";
 import { CURRICULUM_TRACKS, getCurriculumTrack, setCurriculumTrack, type CurriculumTrack } from "./data/curriculum";
 import { getSchoolForm, setSchoolForm, type SchoolForm } from "./data/schoolForm";
+import VantaBirdsBackground from "./VantaBirdsBackground";
 import { acceptCookieConsent, clearAccountStudyData, clearLocalAccount, createLocalAccount, getAccount, getSavedAccounts, hasCookieConsent, hydrateRemoteProgress, hasRemoteSession, saveAccountEmail, syncProgressToServer, verifyLocalPassword, verifyPendingEmail, resendPendingEmail, requestAccessReset, completeAccessReset, startAccountEmailVerification, finishAccountEmailVerification, type LocalAccount } from "./data/account";
 import { adminSignIn, generateSubscriptionKey, getAdminStudents, assignAdminTrial, setAdminStudentAccess, getSubscriptionStatus, redeemSubscriptionKey, submitSubscriptionRequest, type AdminStudent, type AdminStudentsSnapshot, type SubscriptionStatus } from "./data/subscription";
 
@@ -22,9 +23,9 @@ const icons:Record<Section,string>={Dashboard:"⌂",Notes:"✎",Lesson:"01",RAT:
 
 
 function RainfallBackground(){
- return <div className="rainfall-background" aria-hidden="true">
+ return <><VantaBirdsBackground/><div className="rainfall-background" aria-hidden="true">
   {Array.from({length:88},(_,i)=><span key={i} className="rain-drop" style={{"--rain-x":`${(i*37)%100}%`,"--rain-delay":`-${(i*173)%4200}ms`,"--rain-duration":`${2200+(i*97)%1800}ms`,"--rain-length":`${12+(i*7)%17}px`} as CSSProperties}/>)}
- </div>;
+ </div></>;
 }
 
 function MaintenanceLanding(){
