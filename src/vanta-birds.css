@@ -1,26 +1,24 @@
 .vanta-birds-background {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 29;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.88;
+  opacity: 1;
+  visibility: visible;
   mix-blend-mode: screen;
+  isolation: isolate;
 }
 .vanta-birds-background canvas {
-  display: block;
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
   width: 100% !important;
   height: 100% !important;
-  filter: saturate(1.45) contrast(1.12);
-}
-.app-shell > .rainfall-background,
-.app-shell > .vanta-birds-background,
-.app-shell > .leaf-field {
-  pointer-events: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: saturate(1.8) contrast(1.25) brightness(1.3);
 }
 @media (max-width: 640px) {
-  .vanta-birds-background { opacity: 0.76; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vanta-birds-background { display: none; }
+  .vanta-birds-background { opacity: .95; }
 }
