@@ -1366,3 +1366,31 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 :root[data-theme="light"] .break-page.bio-ladder-game .ladder-side-panel,
 :root[data-theme="light"] .break-page.bio-ladder-game .bio-ladder-main,
 :root[data-theme="light"] .break-page.bio-ladder-game .ladder-hero{background-color:transparent!important}
+
+
+/* Laptop input and scrolling: use one primary page scroller instead of trapping
+   the wheel inside a fixed-height main panel. Keep deliberate inner editors scrollable. */
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: auto;
+}
+.app-shell {
+  min-height: 100vh;
+  height: auto;
+  align-items: stretch;
+}
+.main {
+  height: auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: visible;
+  overscroll-behavior: auto;
+  scrollbar-gutter: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
