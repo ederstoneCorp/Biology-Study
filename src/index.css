@@ -1333,3 +1333,36 @@ button.primary-button:hover, .primary-button:hover { background: #ffdf70; }
 @media(max-width:920px){.ladder-game-layout{grid-template-columns:1fr}.bio-ladder{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.bio-ladder:before{display:none}.bio-ladder-rung{grid-template-columns:30px minmax(0,1fr) auto}.ladder-side-foot{margin-top:12px}.bio-ladder-main{min-height:560px}}
 @media(max-width:600px){.ladder-hero-orbit{right:-22px;top:0;transform:scale(.72);opacity:.38}.ladder-hero-copy{max-width:100%}.ladder-hero h2{max-width:75%}.ladder-game-layout{gap:12px}.ladder-side-panel{padding:15px 10px}.bio-ladder{grid-template-columns:1fr 1fr}.bio-ladder-rung{padding:6px;gap:5px;grid-template-columns:27px minmax(0,1fr)}.bio-ladder-rung>strong{display:none}.rung-number{width:25px;height:25px}.rung-label{font-size:10px}.bio-ladder-rung.is-current{transform:translateY(-2px)}.bio-ladder-main{padding:17px;min-height:0}.ladder-hud{grid-template-columns:1fr auto;gap:13px}.ladder-hud-lives{grid-column:2;grid-row:1}.ladder-hud-clock{grid-column:1/-1;align-items:stretch}.ladder-time-track{max-width:none}.ladder-question{min-height:0;font-size:22px}.ladder-option{min-height:62px}.ladder-results-grid{grid-template-columns:1fr}.ladder-results-grid>div{grid-template-columns:1fr auto;align-items:center}.ladder-bottom-line button{width:100%;margin-left:0}.bio-running-ticker{margin-bottom:-20px}}
 @media(prefers-reduced-motion:reduce){.bio-running-ticker>div,.ladder-hero-orbit span,.ladder-hero-orbit i,.ladder-hero-orbit b,.ladder-start-visual>span,.ladder-start-ring,.ladder-start-visual>i,.bio-ladder-rung.is-current,.ladder-hud-clock strong.is-urgent,.ladder-failure-effect,.ladder-failure-effect span,.bio-ladder-main.has-failure,.ladder-feedback{animation:none!important;transition:none!important}}
+
+
+/* Keep the Vanta BIRDS animation exclusive to the Break tab and let it show through every game tile. */
+.break-page.bio-ladder-game{position:relative;isolation:isolate;overflow:visible;min-height:calc(100vh - 92px)}
+.break-page.bio-ladder-game>.vanta-birds-break-background{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;min-height:100%;background:#071312}
+.break-page.bio-ladder-game>.vanta-birds-break-background canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important}
+.break-page.bio-ladder-game>.ladder-hero,.break-page.bio-ladder-game>.ladder-game-layout{position:relative;z-index:1}
+.break-page.bio-ladder-game .ladder-hero,
+.break-page.bio-ladder-game .ladder-side-panel,
+.break-page.bio-ladder-game .bio-ladder-main,
+.break-page.bio-ladder-game .bio-ladder-rung,
+.break-page.bio-ladder-game .ladder-side-foot,
+.break-page.bio-ladder-game .ladder-results-grid>div,
+.break-page.bio-ladder-game .ladder-rules span,
+.break-page.bio-ladder-game .ladder-start-ring,
+.break-page.bio-ladder-game .ladder-option,
+.break-page.bio-ladder-game .ladder-hud,
+.break-page.bio-ladder-game .ladder-bottom-line{background-color:transparent!important;backdrop-filter:none!important}
+.break-page.bio-ladder-game .ladder-hero{background-image:none!important}
+.break-page.bio-ladder-game .bio-ladder-rung.is-current{background:rgba(25,170,112,.13)!important}
+.break-page.bio-ladder-game .bio-ladder-rung.is-cleared{background:rgba(57,220,161,.06)!important}
+.break-page.bio-ladder-game .ladder-option{background:rgba(3,18,14,.08)!important}
+.break-page.bio-ladder-game .ladder-option:hover:not(:disabled){background:rgba(57,220,161,.09)!important}
+.break-page.bio-ladder-game .ladder-results-grid>div{background:rgba(3,18,14,.10)!important}
+.break-page.bio-ladder-game .ladder-rules span{background:rgba(3,18,14,.08)!important}
+.break-page.bio-ladder-game .ladder-side-panel,.break-page.bio-ladder-game .bio-ladder-main{border-color:rgba(109,228,180,.25)!important;box-shadow:0 0 24px rgba(0,0,0,.04)}
+.break-page.bio-ladder-game .bio-ladder-rung{border-color:rgba(125,220,180,.18)!important}
+.break-page.bio-ladder-game .ladder-hud{border-bottom-color:rgba(125,220,180,.22)!important}
+.break-page.bio-ladder-game .ladder-bottom-line{border-top-color:rgba(125,220,180,.22)!important}
+:root[data-theme="light"] .break-page.bio-ladder-game>.vanta-birds-break-background{background:#071312}
+:root[data-theme="light"] .break-page.bio-ladder-game .ladder-side-panel,
+:root[data-theme="light"] .break-page.bio-ladder-game .bio-ladder-main,
+:root[data-theme="light"] .break-page.bio-ladder-game .ladder-hero{background-color:transparent!important}
