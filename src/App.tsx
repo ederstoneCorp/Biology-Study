@@ -6,6 +6,7 @@ import Practice from "./pages/Practice";
 import Lesson from "./pages/Lesson";
 import Analytics from "./pages/Analytics";
 import VantaBirdsBackground from "./VantaBirdsBackground";
+import VantaBirdsBreakBackground from "./VantaBirdsBreakBackground";
 import PROFILE_PHOTO from "./assets/profilePhoto";
 import { getProgress, hasCompletedRATToday, hasReadLessonToday, getCATStatus, getNextLessonId, getLessonsCompletedToday, getRATsCompletedToday, replaceProgress, clearActiveRAT, type StudyProgress } from "./data/progress";
 import { getDailyFact } from "./data/commonKnowledge";
@@ -211,7 +212,7 @@ function BreakPanel(){
  const ladder=Array.from({length:10},(_,i)=>({step:i+1,points:(i+1)*100}));
  const currentStep=chosen===null?index:index+1;
  const progressPercent=Math.max(0,remainingMs/QUESTION_MS*100);
- return <div className="content break-page bio-ladder-game">
+ return <div className="content break-page bio-ladder-game"><VantaBirdsBreakBackground />
   <section className="break-hero ladder-hero"><div className="ladder-hero-copy"><span className="badge">PREMIUM • BIOLOGY ARCADE</span><h2>Bio Break: <span>Cell Rescue</span></h2><p>Climb the Biology ladder. Every correct answer lifts you higher; every mistake costs a life. Can you reach the summit before the flame catches up?</p></div><div className="ladder-hero-orbit" aria-hidden="true"><span>🧬</span><i/><b/></div><div className="bio-running-ticker" aria-label="Game tips"><div><span>CLIMB THE LADDER</span><b>✦</b><span>THREE LIVES</span><b>✦</b><span>20 SECONDS PER QUESTION</span><b>✦</b><span>BIOLOGY KNOWLEDGE WINS</span><b>✦</b><span>CLIMB THE LADDER</span><b>✦</b><span>THREE LIVES</span><b>✦</b><span>20 SECONDS PER QUESTION</span><b>✦</b><span>BIOLOGY KNOWLEDGE WINS</span></div></div></section>
   <div className="ladder-game-layout">
    <aside className="panel ladder-side-panel"><div className="ladder-side-heading"><span className="eyebrow">THE ASCENT</span><strong>LEVEL LADDER</strong></div><div className="bio-ladder" aria-label="Question ladder">{ladder.slice().reverse().map(item=>{const reached=item.step<currentStep||(finished&&score>=(item.step*100));const activeStep=item.step===currentStep&&!finished;return <div key={item.step} className={`bio-ladder-rung ${activeStep?"is-current":reached?"is-cleared":""}`}><span className="rung-number">{String(item.step).padStart(2,"0")}</span><span className="rung-label">{["Cell Starter","Gene Scout","Plant Power","Body Systems","Enzyme Expert","DNA Decoder","Eco Ranger","Cell Guardian","Bio Master","Life Legend"][item.step-1]}</span><strong>{item.points} XP</strong>{reached&&<b aria-label="Cleared">✓</b>}</div>;})}</div><div className="ladder-side-foot"><span>SUMMIT GOAL</span><strong>1,000 XP</strong><small>Accuracy + speed determine your score.</small></div></aside>
