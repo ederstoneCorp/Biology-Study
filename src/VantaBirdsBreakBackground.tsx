@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 
 declare global {
   interface Window {
-    VANTA?: { BIRDS: (options: Record<string, unknown>) => { destroy: () => void } };
     THREE?: unknown;
   }
 }
@@ -33,8 +32,11 @@ export default function VantaBirdsBreakBackground() {
       try {
         await loadScript(THREE_SRC);
         await loadScript(VANTA_BIRDS_SRC);
-        if (cancelled || !hostRef.current || !window.VANTA?.BIRDS) return;
-        effect = window.VANTA.BIRDS({
+        const vantaBirds = (window.VANTA as unknown as {
+          BIRDS?: (options: Record<string, unknown>) => { destroy: () => void };
+        } | undefined)?.BIRDS;
+        if (cancelled || !hostRef.current || !vantaBirds) return;
+        effect = vantaBirds({
           el: hostRef.current,
           THREE: window.THREE,
           mouseControls: true,
