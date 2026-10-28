@@ -41,6 +41,13 @@ export function adminSignIn(adminKey: string) {
   }, "");
 }
 
+export function setAdminPassword(token: string, password: string) {
+  return request<{ ok: boolean; message: string }>("/api/subscriptions/admin/password", {
+    method: "POST",
+    body: JSON.stringify({ password }),
+  }, token);
+}
+
 export function generateSubscriptionKey(token: string, durationDays: 30 | 60 | 90) {
   return request<{ key: string; durationDays: number; createdAt: string }>("/api/subscriptions/admin/keys", {
     method: "POST",
