@@ -438,7 +438,7 @@ app.post("/api/subscriptions/admin/password", authAdmin, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
     await pool.query(
       "INSERT INTO admin_credentials (id, password_hash, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash, updated_at = NOW()",
-      ["primary"],
+      ["primary", passwordHash],
     );
     return res.json({ ok: true, message: "Administrator password saved. Use it for future sign-ins." });
   } catch (error) {
